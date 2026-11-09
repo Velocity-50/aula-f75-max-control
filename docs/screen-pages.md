@@ -8,7 +8,7 @@ The screen shows one page at a time. The home page shows the clock, date, batter
 2. Turn the knob to step through the pages. Stop on the image page.
 3. Press **Fn** and the knob again to return the knob to volume control.
 
-Pressing the knob without **Fn** only sends mute. Step 2 comes from a [Tech4Gamers review](https://tech4gamers.com/aula-f75-max-review/) ("You turn the volume knob to cycle between these layers") and the HardReset_Pro videos [How to Enter TFT Screen](https://www.youtube.com/watch?v=vncL7hUS27o) and [How to Use TFT Screen](https://www.youtube.com/watch?v=-JsSjmU73ng). The video lists the menu as System, RGB effect, colour, brightness, speed, PC volume, language, **Image Display**, and the main page.
+Pressing the knob without **Fn** only sends mute. This procedure was confirmed on an F75 Max on 2026-11-09. In screen control, the knob also reaches the keyboard's other settings pages. The [Tech4Gamers review](https://tech4gamers.com/aula-f75-max-review/) and the HardReset_Pro videos [How to Enter TFT Screen](https://www.youtube.com/watch?v=vncL7hUS27o) and [How to Use TFT Screen](https://www.youtube.com/watch?v=-JsSjmU73ng) describe the same pages: System, RGB effect, colour, brightness, speed, PC volume, language, **Image Display**, and the main page.
 
 ## What the computer can do
 
