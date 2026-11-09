@@ -9,6 +9,7 @@ You can:
 - Put an image or animated GIF on the keyboard's screen.
 - Sync the clock on the keyboard's screen.
 - Remap keys on the base layer and the Fn layer, and store macros on the keyboard.
+- Set the sleep timer, key response, Fn switch, and the Win, Alt+F4, and Alt+Tab locks.
 
 ![Per-key colours in the web control panel](assets/Key%20Selection.png)
 
@@ -37,7 +38,7 @@ To update the dependencies, run `uv lock --upgrade` and commit the new `uv.lock`
 
 2. Open <http://127.0.0.1:8075>.
 
-The server listens only on `127.0.0.1`. To use another port, run `./server.py --port 8080`; `./server.py --help` lists the options. The dot in the top-right corner turns green when the keyboard is connected. The **Lighting** and **Keys** switch at the top picks what you edit.
+The server listens only on `127.0.0.1`. To use another port, run `./server.py --port 8080`; `./server.py --help` lists the options. The dot in the top-right corner turns green when the keyboard is connected. The **Colors** and **Config** switch at the top picks what you edit.
 
 On the **Per-key** tab:
 
@@ -51,7 +52,7 @@ On the **Effect** tab, pick an effect and set its colour, brightness, speed, and
 
 Click **Apply** to send the change to the keyboard. To send changes automatically, turn on **Auto-apply**. A per-key update takes about one second.
 
-The keyboard cannot report its current lighting. After each successful apply, the server saves the settings to `~/.config/aula-f75max/state.json` and loads them the next time you open the page.
+The keyboard cannot report its current lighting. After each successful apply, the server saves the lighting to `~/.config/aula-f75max/state.json` and loads it the next time you open the page.
 
 On the **Screen** tab:
 
@@ -68,7 +69,7 @@ An upload takes about 0.11 seconds per 4 KB chunk. A 28-frame GIF takes about 25
 
 ![Key remapping in the web control panel](assets/Keybind%20Settings.png)
 
-Click **Keys** at the top. The board shows the assignments for the selected layer. A remapped key is highlighted and shows what it sends in place of its printed label; in the screenshot, Del sends Home.
+Click **Config** at the top. The board shows the assignments for the selected layer. A remapped key is highlighted and shows what it sends in place of its printed label; in the screenshot, Del sends Home.
 
 To remap keys:
 
@@ -98,6 +99,19 @@ To make a macro:
 The keyboard holds up to 100 macros in a small memory. The panel shows how much is used; every macro and every event takes 8 of the 2700 available bytes. Deleting a macro also removes the keys bound to it, and later macros move up one number.
 
 Keys that the firmware reserves are greyed out: Fn on both layers, and Backspace on the Fn layer. Assigning a mouse click directly to a key does nothing on this keyboard, so use a macro with **Add mouse click** instead. The keyboard cannot report its key assignments, so the app saves them to `~/.config/aula-f75max/keymap.json`, which `./aula.py remap` uses too.
+
+### Change keyboard settings
+
+Click **Config** at the top, then the **Settings** tab, change any of these, and click **Apply**:
+
+| Setting | What it does | Factory default |
+| --- | --- | --- |
+| **Sleep after** | Idle time before the keyboard sleeps in 2.4G or Bluetooth mode: never, 1, 5, or 30 minutes. The firmware offers nothing longer than 30 minutes except never. | 5 minutes |
+| **Key response** | Debounce level 1 to 5. 1 is fastest; raise it if keys double-type. | 2 |
+| **Block keys** | Disables the Win key, Alt+F4, or Alt+Tab, for example so a game isn't closed or left by accident | All off |
+| **Fn switch** | Probably swaps the top row between F1–F12 and media keys. Not yet tested on this keyboard. | Off |
+
+The keyboard takes all of these in one message, so **Apply** writes every setting at once. It cannot report them back, so the server saves them to the `settings` part of `~/.config/aula-f75max/state.json` and the page starts from those values, or from the factory defaults if nothing was saved. Settings changed with other software are replaced on the next apply.
 
 ## Use the command line
 
@@ -146,14 +160,16 @@ The keyboard (USB ID `0c45:800a`) accepts 64-byte HID feature reports on its ven
 - The lighting, clock, per-key, and screen formats come from [mohin7/aula-f75max](https://github.com/mohin7/aula-f75max), [thibaultmiclo/aula-driver](https://github.com/thibaultmiclo/aula-driver), and [VitalyArt/Aula-F75-Max-Driver](https://github.com/VitalyArt/Aula-F75-Max-Driver). The screen upload, 16-bit colour, and 2 ms frame-delay units were confirmed on the keyboard.
 - The LED number for each key comes from `layouts/rgb-keyboard.xml` in AULA's F75 Max Windows driver, version 1.0.0.5. That file leaves out the right Ctrl key. Its LED number, 98, was found by testing on the keyboard.
 - Remaps and macros use the formats from [thibaultmiclo/aula-driver](https://github.com/thibaultmiclo/aula-driver), written for the EA75MAX. A key's remap slot is its LED number. Both were confirmed on the keyboard; [docs/keymap.md](docs/keymap.md) and [docs/macros.md](docs/macros.md) record the tests.
+- The keyboard settings format comes from [mohin7/aula-f75max](https://github.com/mohin7/aula-f75max), which tested it on the F75 Max, and from [thibaultmiclo/aula-driver](https://github.com/thibaultmiclo/aula-driver). Writing a 30-minute sleep timer was acknowledged by the keyboard; [docs/reset.md](docs/reset.md) has the byte layout.
 
 A screen upload uses a second interface (usage page `0xFF68`). After a header command on the main interface, the image goes over in 4096-byte output reports, and the keyboard acknowledges each one.
 
 | File | Contents |
 | --- | --- |
 | `aula.py` | Command-line tool |
-| `protocol.py` | USB protocol: lighting, per-key colours, clock, screen upload, remaps, and macros |
+| `protocol.py` | USB protocol: lighting, per-key colours, clock, screen upload, remaps, macros, and settings |
 | `keymap.py` | Remap actions, macro events, and their encoding; saves `keymap.json` |
+| `settings.py` | Keyboard settings (sleep timer, key response, key locks, Fn switch) and their encoding |
 | `layout.py` | Key positions, LED numbers, and effect names |
 | `screen.py` | Image and GIF conversion for the screen |
 | `server.py` | FastAPI server for the web control panel |

@@ -11,13 +11,15 @@ layout.py   (data: MODES, LAYOUT, LEDS)        no project imports
 protocol.py (HID: Keyboard, constants)          imports hid only
 screen.py   (Pillow: image → screen stream)     imports protocol constants, never the device
 keymap.py   (pydantic: remaps, macros → bytes)  imports layout, protocol constants, never the device
+settings.py (pydantic: Settings → report bytes) imports protocol constants, never the device
 aula.py     (CLI)        → layout, protocol, screen, keymap
-server.py   (FastAPI)    → layout, protocol, screen, keymap   → serves web/ statically
+server.py   (FastAPI)    → layout, protocol, screen, keymap, settings   → serves web/ statically
 ```
 
-- **Command channel** (usage page `0xFF13`): 64-byte feature reports, 35 ms (`DELAY`) before each send/read. Every operation is `04 18` begin → select block (`04 13` lighting, `04 23` per-key table, `04 11`/`04 27` base/Fn remap table, `04 28` clock, `04 72` screen header; `fields[8]` = page/chunk count) → data → `04 02` apply (some flows end with `04 F0`). 576-byte tables go through `Keyboard.write_table`. Macros differ: `04 19` → `04 15` → buffer → `04 02`, no begin/finalize. `send_ack` requires reply byte 3 == `0x01`. Build packets with `packet(0x04, cmd, fields={offset: value})`.
+- **Command channel** (usage page `0xFF13`): 64-byte feature reports, 35 ms (`DELAY`) before each send/read. Every operation is `04 18` begin → select block (`04 13` lighting, `04 23` per-key table, `04 11`/`04 27` base/Fn remap table, `04 17` settings with `fields[2]` = 1, `04 28` clock, `04 72` screen header; `fields[8]` = page/chunk count) → data → `04 02` apply (some flows end with `04 F0`). 576-byte tables go through `Keyboard.write_table`. Macros differ: `04 19` → `04 15` → buffer → `04 02`, no begin/finalize. `send_ack` requires reply byte 3 == `0x01`. Build packets with `packet(0x04, cmd, fields={offset: value})`.
 - **Display channel** (usage page `0xFF68`): `Keyboard.upload_screen` opens a second HID handle and writes 4096-byte output reports, reading one ack per chunk.
-- **Web lighting apply**: `PUT /api/state` → pydantic `State` → `with_keyboard()` → `kb.lighting(...)` or `kb.per_key(...)` → on success, persist to `~/.config/aula-f75max/state.json`. The keyboard cannot report its config, so that file is the source of truth for the UI.
+- **Web lighting apply**: `PUT /api/state` → pydantic `State` → `with_keyboard()` → `kb.lighting(...)` or `kb.per_key(...)` → on success, `update_state()` replaces the lighting fields of `~/.config/aula-f75max/state.json`, keeping its `settings`. The keyboard cannot report its config, so that file is the source of truth for the UI.
+- **Settings apply**: `PUT /api/settings` → `settings.Settings` (sleep in minutes, one of `SLEEP_MINUTES`; response 1–5) → `Settings.encode()` → `kb.settings(report)` writes the key locks, Fn switch, sleep timer, and response level together → on success `update_state(settings=...)`. `GET /api/settings` returns the saved values or factory defaults. No CLI command.
 - **Screen upload**: `POST /api/screen?fit=` (raw file body) → `screen.load/encode/preview` in a threadpool → `begin_upload` → daemon thread `run_upload` holds `device_lock` and updates the module-level `upload` dict → client polls `GET /api/screen` (adds `saved`) every 500 ms → on success writes `~/.config/aula-f75max/screen.gif` (preview) and `screen.bin` (exact stream). `POST /api/screen/resend` sends `screen.bin` again through `begin_upload`. No known command selects the screen page; the user switches to the image with Fn + knob, then turns the knob.
 - **Keymap apply**: `PUT /api/keymap` (or `aula.py remap`) → `keymap.Keymap` (actions discriminated by `kind`; validators reject reserved keys in `keymap.RESERVED`, dangling macro indices, and over-budget macros) → `Keymap.encode()` → `kb.keymap(macros, base, fn)` writes all three every time → on success `keymap.save()` to `~/.config/aula-f75max/keymap.json`, shared by the CLI and web UI. A key's remap slot is its LED number. Layer keys are physical `LEDS` names; action/macro keys are `keymap.KEYS` names.
 - **CLI**: argparse subcommands `light | keys | clock | screen | remap`; open `Keyboard()`, run, `kb.close()` in `finally`, print `ok`. `remap` with no arguments prints `keymap.json` without opening the device.
@@ -33,7 +35,7 @@ server.py   (FastAPI)    → layout, protocol, screen, keymap   → serves web/ 
 ## Key Directories
 
 - `/` (repo root): all Python modules; no package directory.
-- `web/`: vanilla ES modules, no bundler. `app.js` handles the Lighting/Keys section switch, lighting state, tabs, and apply; `board.js` renders the shared board and selection; `api.js` (`api`, `message`, status), `hex.js` (colour fields); `screen.js` exports `initScreen({ api, message })` for the Screen tab; `keymap.js` (`initKeymap`) and `macros.js` (`initMacros`) drive the Keys section, with `options.js` indexing `GET /api/keymap/options` by `KeyboardEvent.code` and reading held modifiers; `style.css` holds theme variables.
+- `web/`: vanilla ES modules, no bundler. `app.js` handles the Colors/Config section switch (`data-section` values `lighting`/`config`), the Config tabs (`data-config`: `base`, `fn`, `settings`), lighting state, and footer visibility (`syncFooter`); `board.js` renders the shared board and selection; `api.js` (`api`, `message`, status), `hex.js` (colour fields); `screen.js` exports `initScreen({ api, message })` for the Screen tab; `settings.js` (`initSettings`) binds `data-setting` fields for the Settings tab; `keymap.js` (`initKeymap`, `show(layer)`) and `macros.js` (`initMacros`) drive the Base and Fn tabs, with `options.js` indexing `GET /api/keymap/options` by `KeyboardEvent.code` and reading held modifiers; `style.css` holds theme variables.
 - `assets/`: README screenshots (filenames contain spaces; link as `assets/Key%20Selection.png`).
 - `docs/`: protocol research (keymap, macros, knob, factory reset, screen pages), with sources and F75 Max hardware test results. Facts copied from the EA75MAX sibling are unverified on the F75 Max until a test section says otherwise.
 
@@ -61,7 +63,7 @@ Run scripts from the repo root; `uv` finds the project from the cwd. From elsewh
 - **Concurrency**: sync FastAPI endpoints for device calls (they run in a threadpool); CPU-heavy image work in async endpoints goes through `run_in_threadpool`; long uploads use a background thread plus a polled status dict.
 - **JS**: 2-space indent, double quotes, semicolons, `const` and arrow functions, camelCase names, kebab-case DOM ids, a `$` helper per file. Wire events by looping over `data-*` attributes (`data-view`, `data-select`, `data-for`). Handlers mutate `state` and then call `changed()` (sync → paint → optional 400 ms auto-apply). `view` (visible tab) is separate from `state.active` (what goes to the keyboard); `.lighting-only` elements hide on the Screen tab. `api()` sends JSON only for string bodies (raw for files); surface errors with `message(text, true)`.
 - **CSS**: theme custom properties in `:root`; `--unit` is the 1u key size that JS reads; keycaps use `color-mix(... var(--led) var(--level) ...)`.
-- **Docs and UI copy**: British spelling ("colour"), sentence case, bold for UI labels.
+- **Docs and UI copy**: British spelling ("colour"), sentence case, bold for UI labels. Exception: the user is American and chose **Colors** for the section switch.
 - **Keep files under ~300 lines**: split into modules, as with `protocol`/`layout`/`screen` and `web/screen.js`.
 - **Commits**: Conventional Commits with scope, lowercase imperative subjects: `feat(web): …`, `feat(screen): …`, `docs: …`, `build: …`.
 
@@ -72,6 +74,7 @@ Run scripts from the repo root; `uv` finds the project from the cwd. From elsewh
 | `aula.py` | CLI entry point (`#!/usr/bin/env -S uv run`) |
 | `server.py` | FastAPI app, pydantic models, upload job, static mount of `web/` |
 | `protocol.py` | All HID constants and the `Keyboard` class |
+| `settings.py` | Keyboard settings model and its 64-byte report |
 | `screen.py` | Fit, timing normalisation, RGB565 encode, preview GIF |
 | `layout.py` | Effect names (list index = firmware mode byte), key geometry, LED numbers |
 | `web/app.js`, `web/screen.js` | Front end |
@@ -93,9 +96,9 @@ Run scripts from the repo root; `uv` finds the project from the cwd. From elsewh
   ./aula.py --help
   ./aula.py screen FILE --preview /tmp/out.gif
   HOME=$(mktemp -d) ./aula.py remap         # prints the keymap; parse/validation errors exit before the device
-  uv run python -m py_compile aula.py server.py protocol.py layout.py screen.py keymap.py
+  uv run python -m py_compile aula.py server.py protocol.py layout.py screen.py keymap.py settings.py
   for f in web/*.js; do node --check "$f"; done
   ```
-- Pure, hardware-free units: `screen.normalize/encode/rgb565/load/preview`, `protocol.packet/screen_chunks`, `keymap.Keymap.encode/layer_table/macro_buffer` (byte-identical to thibaultmiclo's `remap_table`/`macro_buffer`), `server.layout`, the pydantic models, and `GET /api/layout` / `GET /api/keymap/options` / `POST /api/screen/preview`.
-- Hardware behaviour was verified on the real keyboard. Commands that write to it change the user's lighting, screen, or key assignments: prefer `--preview`. To restore lighting after a test, re-PUT the saved `GET /api/state`; to restore keys, re-PUT `GET /api/keymap`. Test a new Fn-layer key with a one-key write first; the firmware silently ignores reserved slots (Backspace). Test new screen-protocol changes with a single still frame (9 chunks) before a full GIF. The CLI warns if acked chunks ≠ total.
+- Pure, hardware-free units: `screen.normalize/encode/rgb565/load/preview`, `protocol.packet/screen_chunks`, `keymap.Keymap.encode/layer_table/macro_buffer` (byte-identical to thibaultmiclo's `remap_table`/`macro_buffer`), `settings.Settings.encode` (defaults are byte-identical to VitalyArt's factory-reset settings report), `server.layout`, the pydantic models, and `GET /api/layout` / `GET /api/keymap/options` / `GET /api/settings` / `POST /api/screen/preview`.
+- Hardware behaviour was verified on the real keyboard. Commands that write to it change the user's lighting, screen, key assignments, or settings: prefer `--preview`. To restore lighting after a test, re-PUT the saved `GET /api/state`; to restore keys, re-PUT `GET /api/keymap`; to restore settings, re-PUT `GET /api/settings`. Test a new Fn-layer key with a one-key write first; the firmware silently ignores reserved slots (Backspace). Test new screen-protocol changes with a single still frame (9 chunks) before a full GIF. The CLI warns if acked chunks ≠ total.
 - Verify UI changes in a real browser against a running `./server.py`.
