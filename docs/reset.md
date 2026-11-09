@@ -41,11 +41,11 @@ The zero reports in steps 2 and 3 have no `AA 55` trailer, unlike thibaultmiclo'
 | 2 | Disable Win key | 0, off |
 | 3 | Disable Alt+F4 | 0, off |
 | 4 | Disable Alt+Tab | 0, off |
-| 5 | Fn switch: 1 makes the top row send media keys without Fn | 0, top row sends F1–F12 |
+| 5 | Fn switch, probably swaps the top row between F1–F12 and media keys | 0 |
 | 6 | Sleep timer: 0 never, 1 one minute, 2 five minutes, 3 thirty minutes | 2, five minutes |
 | 8 | Response level | 2 |
 
-thibaultmiclo confirmed only the Win key byte on hardware. Its settings report also ends with `AA 55` at bytes 62 and 63. VitalyArt's report has no trailer. thibaultmiclo calls byte 5 "Fn toggle"; on the F75 Max it swaps the top row (see the test below).
+thibaultmiclo confirmed only the Win key byte on hardware. Its settings report also ends with `AA 55` at bytes 62 and 63. VitalyArt's report has no trailer. thibaultmiclo calls byte 5 "Fn toggle"; mohin7 says it swaps the top row between F1–F12 and media keys.
 
 The sources disagree on the response level range. thibaultmiclo (EA75MAX) sends 0 to 4 and labels 2 as about 8 ms to 9 ms. mohin7 (F75 Max) sends 1 to 5, labels 2 as about 5 ms to 6 ms wired, and says it tested the whole settings report on the F75 Max. VitalyArt's 2.4G code also sends 1 to 5. `settings.py` follows the F75 Max sources: 1 to 5, default 2.
 
@@ -53,7 +53,7 @@ The sources disagree on the response level range. thibaultmiclo (EA75MAX) sends 
 
 `settings.Settings.encode` builds this report and `Keyboard.settings` sends it with `04 18`, `04 17` (byte 2 = `01`, byte 8 = `01`), the report, then `04 02`. With every other setting at its default and the sleep timer at 3 (30 minutes), the keyboard acknowledged each step (2026-11-09). Whether the keyboard then stays awake for 30 minutes in wireless mode has not been timed yet.
 
-With byte 5 = 1, the top row sends media keys without Fn on macOS (2026-11-09). With 0 it sends F1–F12. mohin7 describes the byte the same way.
+In Mac mode, chosen on the screen's **SYSTEM** page (Win/Mac/iOS/Android), the top row sent media keys with byte 5 at both 0 and 1 (macOS, 2026-11-09). The Epomaker manual says Mac mode makes F1–F12 media keys by default, with Fn + F1–F12 sending F1–F12. What byte 5 does in Windows mode is untested. No known USB command reads or sets the system mode.
 
 ## What the reset leaves behind
 
