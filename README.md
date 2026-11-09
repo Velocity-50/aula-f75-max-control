@@ -62,15 +62,40 @@ On the **Screen** tab:
 
 An upload takes about 0.11 seconds per 4 KB chunk. A 28-frame GIF takes about 25 seconds. Lighting changes wait until the upload finishes. **On the keyboard** shows the last image uploaded from this app. The app keeps the exact bytes of that upload in `~/.config/aula-f75max/screen.bin`, so **Upload again** sends the same image without the original file. Each upload rewrites the screen's flash, so prefer the knob when it works.
 
-In **Keys**:
+### Remap keys and record macros
+
+![Key remapping in the web control panel](assets/Keybind%20Settings.png)
+
+Click **Keys** at the top. The board shows the assignments for the selected layer. A remapped key is highlighted and shows what it sends in place of its printed label; in the screenshot, Del sends Home.
+
+To remap keys:
 
 1. Pick the **Base** or **Fn** layer. The Fn layer is active while you hold Fn.
-2. Select keys on the board, then pick an action: **Key** (with optional modifiers; **Press a key** fills it in from your keyboard), **Media**, **Macro**, **Disable**, or **Default** to undo a remap. Click **Assign to selected keys**. A remapped key is highlighted and shows its assignment in place of its printed label.
-3. Click **Apply** to write both layers and all macros to the keyboard. **Reset layer** asks for confirmation, then returns the layer to the factory assignments and writes it to the keyboard straight away, together with any other unapplied changes.
+2. Select keys on the board. The line under the board lists them.
+3. Pick an action and click **Assign to selected keys**:
 
-Under **Macros**, click **New macro**, then **Record** and type the sequence, or add events by hand with a delay after each one. **Record** stores the time between key presses as the delays. **Add mouse click** adds a left, right, or middle button press and release, so a macro is also how a key clicks the mouse. Bind the macro to a key with the **Macro** action. A macro can play once, a set number of times, until you press the key again (**toggle**), or while you hold the key. Macro memory is limited; the panel shows how much is used.
+	| Action | What the key does |
+	| --- | --- |
+	| **Key** | Sends another key, with optional Ctrl, Shift, Alt, and Win. **Press a key** fills in the key and modifiers from your keyboard. |
+	| **Media** | Play/pause, stop, previous or next track, volume up or down, or mute |
+	| **Macro** | Plays a macro stored on the keyboard |
+	| **Disable** | Nothing |
+	| **Default** | Its factory action, undoing a remap |
 
-Keys that the firmware reserves are greyed out: Fn on both layers, and Backspace on the Fn layer. The keyboard cannot report its key assignments, so the app saves them to `~/.config/aula-f75max/keymap.json`, which `./aula.py remap` uses too.
+4. Click **Apply** to write both layers and all macros to the keyboard.
+
+**Reset layer** asks for confirmation, then returns the layer to the factory assignments and writes it to the keyboard straight away, together with any other unapplied changes.
+
+To make a macro:
+
+1. Under **Macros**, click **New macro** and give it a name.
+2. Click **Record**, type the sequence, and click **Stop**. Recording keeps the time between key presses as the delays. You can also add, edit, or delete events by hand: each event is a key or mouse button press or release, followed by a delay of 10 to 65535 ms. **Add mouse click** adds a button press and release.
+3. Select the keys that should play it, pick the **Macro** action and the macro, and choose how it plays: **once**, a set number of **times**, **toggle** (repeats until you press the key again), or **hold** (repeats while you hold the key).
+4. Click **Apply**.
+
+The keyboard holds up to 100 macros in a small memory. The panel shows how much is used; every macro and every event takes 8 of the 2700 available bytes. Deleting a macro also removes the keys bound to it, and later macros move up one number.
+
+Keys that the firmware reserves are greyed out: Fn on both layers, and Backspace on the Fn layer. Assigning a mouse click directly to a key does nothing on this keyboard, so use a macro with **Add mouse click** instead. The keyboard cannot report its key assignments, so the app saves them to `~/.config/aula-f75max/keymap.json`, which `./aula.py remap` uses too.
 
 ## Use the command line
 
