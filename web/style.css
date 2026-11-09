@@ -146,6 +146,19 @@ button:disabled { opacity: 0.5; cursor: default; }
 button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
 button.primary-outline { border-color: var(--accent); }
 
+.hex {
+  width: 86px;
+  padding: 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--fg);
+  font: 13px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.hex.invalid { border-color: var(--error); }
+.hex:disabled { opacity: 0.5; }
+
 input[type="color"] {
   width: 40px;
   height: 32px;

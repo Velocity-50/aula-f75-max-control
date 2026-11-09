@@ -42,6 +42,7 @@
           <h2>Key colour</h2>
           <div class="buttons">
             <input type="color" id="paint-color" value="#00ffff">
+            <input type="text" class="hex" data-for="paint-color" aria-label="key colour hex">
             <button id="paint" class="primary-outline">Paint selected</button>
             <button id="unpaint">Reset to default</button>
           </div>
@@ -52,6 +53,7 @@
           <h2>Default colour</h2>
           <div class="buttons">
             <input type="color" id="base-color">
+            <input type="text" class="hex" data-for="base-color" aria-label="default colour hex">
             <span class="note">used by every key without its own colour</span>
           </div>
         </div>
@@ -72,6 +74,7 @@
           <h2>Colour</h2>
           <div class="buttons">
             <input type="color" id="effect-color">
+            <input type="text" class="hex" data-for="effect-color" aria-label="effect colour hex">
             <label><input type="checkbox" id="effect-rainbow"> Rainbow</label>
           </div>
         </div>

@@ -34,7 +34,7 @@ The server listens only on `127.0.0.1`. The dot in the top-right corner turns gr
 On the **Per-key** tab:
 
 1. Select keys. Click a key to select it, or drag across several keys. The buttons select common groups: **All**, **None**, **Top row**, **Home row**, **Bottom row**, **Arrows**, and **WASD**. Press Esc to clear the selection.
-2. Pick a colour, or click a swatch.
+2. Pick a colour with the colour picker, type a hex value such as `#ff4000` or `f40`, or click a swatch.
 3. Click **Paint selected**. **Reset to default** removes the colour from the selected keys.
 
 The **Default colour** applies to every key that has no colour of its own.
