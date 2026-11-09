@@ -1,6 +1,6 @@
 # Key remapping
 
-The keyboard stores two remap tables in firmware: the base layer and the Fn layer. Each table holds one 4-byte slot per key. A zero slot keeps the key's default action. Source: thibaultmiclo/aula-driver, `aula/protocol.py` (`Action.slot`, `remap_table`, `Keyboard.set_remap`) and `aula/keycodes.py`. That project tested remaps on an EA75MAX. Nobody has tested them on an F75 Max.
+The keyboard stores two remap tables in firmware: the base layer and the Fn layer. Each table holds one 4-byte slot per key. A zero slot keeps the key's default action. Source: thibaultmiclo/aula-driver, `aula/protocol.py` (`Action.slot`, `remap_table`, `Keyboard.set_remap`) and `aula/keycodes.py`. That project tested remaps on an EA75MAX. Both layers also work on the F75 Max; see [Tested on the F75 Max](#tested-on-the-f75-max).
 
 ## Write a table
 
@@ -15,6 +15,24 @@ The exchange uses the command channel and framing that `protocol.py` already use
 | 5 | `04 F0` finalize | Yes |
 
 Every write replaces the whole layer. The keyboard cannot report a table back. VitalyArt's `inspectKeymapPages` tries a read, and tarikmanoar's survey says a GET_REPORT after a block select returns only the ack. Keep the full intended table on the computer, as this project does with `state.json`.
+
+On the F75 Max, the read after the last table report returns all zeros, and the read after `04 F0` returns `04 F0 00 01`.
+
+## Tested on the F75 Max
+
+Tested on 2026-11-09 with a one-off script that writes both tables, using the steps above. Each row is one press on the keyboard after a write.
+
+| Layer | Key (index) | Slot written | Result |
+| --- | --- | --- | --- |
+| Base | Del (119) | `02 00 4A 00` (Home) | Sends Home |
+| Fn | J (62) | `02 00 4C 00` (Delete) | Fn + J deletes forward |
+| Fn | Del (119) | `02 00 4C 00` (Delete) | Fn + Del deletes forward |
+| Fn | Backspace (103) | `02 00 4C 00` (Delete) | Fn + Backspace does nothing |
+| Fn | Backspace (103) | `02 00 1D 00` (Z) | Fn + Backspace does nothing |
+
+The keyboard acked every write, so the firmware accepts a slot for Backspace on the Fn layer and then ignores it. Backspace's base-layer slot was not tested.
+
+AULA's driver XML can mark a key's Fn-layer action as reserved (`fnlayer_disable="1"`), which thibaultmiclo's key data stores as `fn_locked`. No key is marked in `ea75max.json`. Backspace is probably marked in the F75 Max XML, which is not on this machine. Other keys may be reserved too, so test a key on the Fn layer before relying on it.
 
 ## Table layout
 
@@ -64,7 +82,7 @@ An example: Caps Lock (index 55) as Ctrl sets bytes 220 to 223 of the base table
 
 In the EA75MAX key data, every key's `key_index` (remap slot) equals its `light_index` (per-key colour slot). 79 of the F75 Max's 81 keys have the same light index in `layout.py`, which comes from the F75 Max vendor XML, and in `ea75max.json`. The F75 Max has PgUp (118) and PgDn (121). The EA75MAX has neither and has Home at 117.
 
-So the F75 Max key index is probably the LED number in `layout.py`'s `LEDS`. For example, Esc is 1, F1 is 2, Caps Lock is 55, and right Ctrl is 98. This is inferred, not confirmed. AULA's F75 Max `rgb-keyboard.xml` holds the real `key_index` values, and a one-key remap on the keyboard confirms them.
+So the F75 Max key index is the LED number in `layout.py`'s `LEDS`. Del (119) and J (62) are confirmed on the keyboard; see the table above. Other keys are not tested one by one. AULA's F75 Max `rgb-keyboard.xml` holds the real `key_index` values.
 
 Fn (index 96) is in the table too. Remapping Fn probably cuts off the Fn layer and the Fn shortcuts, including the wired-mode switch. Leave it at default.
 
@@ -72,4 +90,5 @@ Fn (index 96) is in the table too. Remapping Fn probably cuts off the Fn layer a
 
 - Whether the knob press has a key index. See [knob.md](knob.md).
 - The full list of special-function and consumer values that the firmware accepts.
-- What the vendor software writes to the Fn-layer table for keys that keep their printed Fn shortcuts.
+- Which F75 Max keys, besides Backspace, the firmware reserves on the Fn layer.
+- What the vendor software writes to the Fn-layer table for keys that keep their printed Fn shortcuts. The tests above wrote zeros there.
