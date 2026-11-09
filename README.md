@@ -13,6 +13,8 @@ You can:
 
 ![Built-in effects in the web control panel](assets/Effect%20Selection.png)
 
+![Screen image upload in the web control panel](assets/Screen%20Selection.png)
+
 ## Requirements
 
 - [uv](https://docs.astral.sh/uv/). Both scripts declare their own dependencies, and `uv` installs them on first run.
