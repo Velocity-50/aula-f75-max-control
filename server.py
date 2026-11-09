@@ -23,6 +23,7 @@ from layout import LAYOUT, LEDS, MODES
 CONFIG_DIR = Path.home() / ".config" / "aula-f75max"
 STATE_FILE = CONFIG_DIR / "state.json"
 SCREEN_FILE = CONFIG_DIR / "screen.gif"  # preview of the last image uploaded to the screen
+SCREEN_STREAM = CONFIG_DIR / "screen.bin"  # exact bytes of that upload, for sending it again
 SECONDS_PER_CHUNK = 0.11  # measured: 225 chunks in 24 s
 WEB_DIR = Path(__file__).parent / "web"
 
@@ -137,9 +138,10 @@ def run_upload(stream: bytes, preview: bytes):
                 kb.close()
 
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        SCREEN_STREAM.write_bytes(stream)
         SCREEN_FILE.write_bytes(preview)
         upload.update(state="done")
-    except (protocol.KeyboardNotFound, OSError) as err:
+    except (protocol.KeyboardNotFound, OSError, ValueError) as err:
         upload.update(state="error", error=str(err))
 
 
@@ -211,6 +213,16 @@ async def preview_screen(request: Request, fit: str = "contain"):
 
 @app.get("/api/screen")
 def get_screen():
+    return {**upload, "saved": SCREEN_STREAM.exists() and SCREEN_FILE.exists()}
+
+
+def begin_upload(stream: bytes, preview: bytes) -> dict:
+    if upload["state"] == "uploading":
+        raise HTTPException(409, "screen upload in progress")
+
+    upload.update(state="uploading", done=0, total=len(stream) // protocol.SCREEN_CHUNK, frames=stream[0], error=None)
+    threading.Thread(target=run_upload, args=(stream, preview), daemon=True).start()
+
     return upload
 
 
@@ -223,13 +235,18 @@ async def start_screen(request: Request, fit: str = "contain"):
     stream = await run_in_threadpool(screen.encode, frames, delays)
     preview = await run_in_threadpool(screen.preview, frames, delays)
 
-    if upload["state"] == "uploading":
-        raise HTTPException(409, "screen upload in progress")
+    return begin_upload(stream, preview)
 
-    upload.update(state="uploading", done=0, total=len(stream) // protocol.SCREEN_CHUNK, frames=len(frames), error=None)
-    threading.Thread(target=run_upload, args=(stream, preview), daemon=True).start()
 
-    return upload
+@app.post("/api/screen/resend")
+async def resend_screen():
+    if not (SCREEN_STREAM.exists() and SCREEN_FILE.exists()):
+        raise HTTPException(404, "no saved upload to send again")
+
+    stream = await run_in_threadpool(SCREEN_STREAM.read_bytes)
+    preview = await run_in_threadpool(SCREEN_FILE.read_bytes)
+
+    return begin_upload(stream, preview)
 
 
 @app.get("/api/screen/current")

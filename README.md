@@ -57,9 +57,9 @@ On the **Screen** tab:
 1. Drop an image or GIF on the drop area, or click it to choose a file.
 2. Pick how the image fits the 128×128 screen: **Contain** shows the whole image with black bars, **Cover** crops it to fill the screen, and **Stretch** ignores the aspect ratio.
 3. Check the preview, which shows the image in the screen's 16-bit colour, then click **Upload to keyboard**.
-4. To show the image, press the knob and choose the image display.
+4. The screen shows the image when the upload finishes. If it later shows the clock again, press **Fn** and the knob together to switch the knob from volume to screen control, then turn the knob to the image page. Pressing the knob alone only mutes. You can also click **Upload again** under **On the keyboard** to send the last upload again.
 
-An upload takes about 0.11 seconds per 4 KB chunk. A 28-frame GIF takes about 25 seconds. Lighting changes wait until the upload finishes. **On the keyboard** shows the last image uploaded from this app.
+An upload takes about 0.11 seconds per 4 KB chunk. A 28-frame GIF takes about 25 seconds. Lighting changes wait until the upload finishes. **On the keyboard** shows the last image uploaded from this app. The app keeps the exact bytes of that upload in `~/.config/aula-f75max/screen.bin`, so **Upload again** sends the same image without the original file. Each upload rewrites the screen's flash, so prefer the knob when it works.
 
 ## Use the command line
 

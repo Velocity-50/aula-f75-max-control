@@ -50,6 +50,7 @@ export function initScreen({ api, message }) {
     progress.hidden = !uploading;
     progress.value = status.total ? status.done / status.total : 0;
     $("#screen-upload").disabled = uploading || !file;
+    $("#screen-resend").disabled = uploading || !status.saved;
 
     const text = $("#screen-status");
     text.classList.remove("error");
@@ -79,14 +80,15 @@ export function initScreen({ api, message }) {
     }
   }
 
-  async function upload() {
+  async function upload(path, options) {
     $("#screen-upload").disabled = true;
+    $("#screen-resend").disabled = true;
 
     try {
-      render(await api(`/api/screen?${fitQuery()}`, { method: "POST", body: file }));
+      render(await api(path, options));
       setTimeout(poll, 500);
     } catch (error) {
-      $("#screen-upload").disabled = false;
+      poll();
       message(error.message, true);
     }
   }
@@ -95,7 +97,8 @@ export function initScreen({ api, message }) {
 
   $("#screen-file").addEventListener("change", (event) => choose(event.target.files[0]));
   $("#screen-fit").addEventListener("change", preview);
-  $("#screen-upload").addEventListener("click", upload);
+  $("#screen-upload").addEventListener("click", () => upload(`/api/screen?${fitQuery()}`, { method: "POST", body: file }));
+  $("#screen-resend").addEventListener("click", () => upload("/api/screen/resend", { method: "POST" }));
 
   drop.addEventListener("dragover", (event) => {
     event.preventDefault();
