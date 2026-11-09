@@ -21,6 +21,7 @@ import keymap
 import protocol
 import screen
 from layout import LAYOUT, LEDS, MODES
+from settings import Settings
 
 CONFIG_DIR = Path.home() / ".config" / "aula-f75max"
 STATE_FILE = CONFIG_DIR / "state.json"
@@ -71,6 +72,7 @@ class State(BaseModel):
     active: Literal["effect", "custom"] = "effect"
     effect: Effect = Effect()
     custom: Custom = Custom()
+    settings: Settings = Settings()
 
 
 def rgb(value: str) -> tuple[int, int, int]:
@@ -96,6 +98,7 @@ def layout() -> dict:
 
 
 device_lock = threading.Lock()
+state_lock = threading.Lock()
 upload = {"state": "idle", "done": 0, "total": 0, "frames": 0, "error": None}
 app = FastAPI()
 
@@ -155,6 +158,16 @@ def load_state() -> State:
     return State()
 
 
+def update_state(**fields) -> State:
+    """Replace some top-level fields of state.json; lighting and settings are saved by separate endpoints."""
+    with state_lock:
+        state = load_state().model_copy(update=fields)
+        STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        STATE_FILE.write_text(state.model_dump_json(indent=2))
+
+    return state
+
+
 @app.get("/api/layout")
 def get_layout():
     return layout()
@@ -186,10 +199,19 @@ def put_state(state: State) -> State:
 
     with_keyboard(apply)
 
-    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(state.model_dump_json(indent=2))
+    return update_state(active=state.active, effect=state.effect, custom=state.custom)
 
-    return state
+
+@app.get("/api/settings")
+def get_settings() -> Settings:
+    return load_state().settings
+
+
+@app.put("/api/settings")
+def put_settings(settings: Settings) -> Settings:
+    with_keyboard(lambda kb: kb.settings(settings.encode()))
+
+    return update_state(settings=settings).settings
 
 
 @app.get("/api/keymap/options")

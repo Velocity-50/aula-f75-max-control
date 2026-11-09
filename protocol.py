@@ -16,7 +16,7 @@ DELAY = 0.035
 
 CUSTOM_MODE = 0x80
 TABLE_SIZE = 0x240  # 144 four-byte slots (per-key colour or remap), sent as 9 pages
-BLOCK_COLORS, BLOCK_REMAP_BASE, BLOCK_REMAP_FN = 0x23, 0x11, 0x27
+BLOCK_COLORS, BLOCK_REMAP_BASE, BLOCK_REMAP_FN, BLOCK_SETTINGS = 0x23, 0x11, 0x27, 0x17
 MACRO_BUFFER_MAX = 0xE00
 
 DISPLAY_USAGE_PAGE = 0xFF68
@@ -114,6 +114,13 @@ class Keyboard:
         self.send_ack(packet(0x04, 0x28, fields={8: 0x01}))
         self.send(bytes(data))
         self.read()  # echoes the data, no ack flag
+        self.send_ack(packet(0x04, 0x02))
+
+    def settings(self, report: bytes):
+        """Write key locks, Fn switch, sleep timer, and key response together; see settings.Settings.encode."""
+        self.send_ack(packet(0x04, 0x18))
+        self.send_ack(packet(0x04, BLOCK_SETTINGS, fields={2: 0x01, 8: 0x01}))
+        self.send(report)
         self.send_ack(packet(0x04, 0x02))
 
     def per_key(self, colors: dict[int, tuple[int, int, int]], brightness: int):
