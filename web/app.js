@@ -275,6 +275,8 @@ function bindControls() {
 
   for (const tab of document.querySelectorAll(".tabs button")) {
     tab.addEventListener("click", () => {
+      if (tab.dataset.view !== view) select([]);
+
       view = tab.dataset.view;
 
       if (view === "screen") return syncControls();
