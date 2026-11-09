@@ -1,3 +1,7 @@
+import { api, message, refreshStatus } from "./api.js";
+import { initBoard } from "./board.js";
+import { bindHex, syncHex } from "./hex.js";
+import { initKeymap } from "./keymap.js";
 import { initScreen } from "./screen.js";
 
 const $ = (selector) => document.querySelector(selector);
@@ -11,94 +15,13 @@ const GROUPS = {
 
 let layout;
 let state;
-let selected = new Set();
-let keyElements = new Map();
+let board;
+let keymap;
 let applying = false;
 let pendingApply = false;
 let autoTimer;
 let view;
-
-async function api(path, options = {}) {
-  const headers = typeof options.body === "string" ? { "content-type": "application/json" } : {};
-  const response = await fetch(path, { headers, ...options });
-  const body = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    const detail = Array.isArray(body.detail) ? body.detail.map((d) => d.msg).join("; ") : body.detail;
-    throw new Error(detail ?? response.statusText);
-  }
-
-  return body;
-}
-
-function renderBoard() {
-  const board = $("#board");
-  const unit = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--unit"));
-  const gap = 4;
-
-  board.style.width = `${layout.width * unit}px`;
-  board.style.height = `${layout.height * unit}px`;
-
-  for (const key of layout.keys) {
-    const el = document.createElement("div");
-    el.className = "key";
-    el.dataset.name = key.name;
-    el.textContent = key.label;
-    el.title = key.name;
-    Object.assign(el.style, {
-      left: `${key.x * unit}px`,
-      top: `${key.y * unit}px`,
-      width: `${key.w * unit - gap}px`,
-      height: `${unit - gap}px`,
-    });
-    board.append(el);
-    keyElements.set(key.name, el);
-  }
-
-  const knob = document.createElement("div");
-  knob.className = "knob";
-  knob.title = "knob (not configurable)";
-  Object.assign(knob.style, {
-    left: `${(layout.width - 1) * unit + 2}px`,
-    top: "0px",
-    width: `${unit - gap - 4}px`,
-    height: `${unit - gap - 4}px`,
-  });
-  board.append(knob);
-
-  let dragAdds = null;
-
-  const keyAt = (event) => document.elementFromPoint(event.clientX, event.clientY)?.closest(".key");
-  const mark = (el) => {
-    dragAdds ? selected.add(el.dataset.name) : selected.delete(el.dataset.name);
-    el.classList.toggle("selected", dragAdds);
-  };
-
-  board.addEventListener("pointerdown", (event) => {
-    const el = keyAt(event);
-
-    if (!el) return;
-
-    dragAdds = !selected.has(el.dataset.name);
-    mark(el);
-  });
-
-  window.addEventListener("pointermove", (event) => {
-    if (dragAdds === null) return;
-
-    const el = keyAt(event);
-
-    if (el && board.contains(el)) mark(el);
-  });
-
-  window.addEventListener("pointerup", () => (dragAdds = null));
-}
-
-function select(names) {
-  selected = new Set(names);
-
-  for (const [name, el] of keyElements) el.classList.toggle("selected", selected.has(name));
-}
+let section = localStorage.getItem("section") === "keys" ? "keys" : "lighting";
 
 function keyColor(key) {
   if (state.active === "custom") return state.custom.keys[key.name] ?? state.custom.base;
@@ -124,7 +47,7 @@ function paintBoard() {
   const level = state.active === "effect" && state.effect.mode === "off" ? 0 : 35 + brightness * 13;
 
   for (const key of layout.keys) {
-    const el = keyElements.get(key.name);
+    const el = board.elements.get(key.name);
     const color = keyColor(key);
 
     el.style.setProperty("--led", color);
@@ -136,7 +59,7 @@ function paintBoard() {
 function syncControls() {
   const { custom, effect } = state;
 
-  for (const tab of document.querySelectorAll(".tabs button")) {
+  for (const tab of document.querySelectorAll(".tabs button[data-view]")) {
     tab.classList.toggle("active", tab.dataset.view === view);
   }
 
@@ -144,7 +67,7 @@ function syncControls() {
   $("#effect-panel").hidden = view !== "effect";
   $("#screen-panel").hidden = view !== "screen";
 
-  for (const el of document.querySelectorAll(".lighting-only")) el.hidden = view === "screen";
+  for (const el of document.querySelectorAll(".lighting-only")) el.hidden = section !== "lighting" || view === "screen";
 
   $("#base-color").value = custom.base;
   $("#custom-brightness").value = custom.brightness;
@@ -163,45 +86,29 @@ function syncControls() {
   syncHex();
 }
 
-function parseHex(text) {
-  let hex = text.trim().replace(/^#/, "").toLowerCase();
+function showSection(next) {
+  if (next !== section) board.select([]);
 
-  if (/^[0-9a-f]{3}$/.test(hex)) hex = [...hex].map((c) => c + c).join("");
+  section = next;
+  localStorage.setItem("section", section);
 
-  return /^[0-9a-f]{6}$/.test(hex) ? `#${hex}` : null;
-}
-
-// copies picker values into their hex fields, leaving the one being typed in alone
-function syncHex() {
-  for (const field of document.querySelectorAll(".hex")) {
-    if (field === document.activeElement) continue;
-
-    field.value = document.getElementById(field.dataset.for).value;
-    field.classList.remove("invalid");
+  for (const button of document.querySelectorAll("[data-section]")) {
+    button.classList.toggle("active", button.dataset.section === section);
   }
-}
 
-function bindHex() {
-  for (const field of document.querySelectorAll(".hex")) {
-    const picker = document.getElementById(field.dataset.for);
+  $("#lighting-section").hidden = section !== "lighting";
+  $("#keys-section").hidden = section !== "keys";
+  board.board.classList.toggle("keys", section === "keys");
 
-    picker.addEventListener("input", syncHex);
+  for (const el of document.querySelectorAll(".keys-only")) el.hidden = section !== "keys";
 
-    field.addEventListener("input", () => {
-      const hex = parseHex(field.value);
+  syncControls();
 
-      field.classList.toggle("invalid", hex === null);
-
-      if (hex === null || hex === picker.value) return;
-
-      picker.value = hex;
-      picker.dispatchEvent(new Event("input"));
-    });
-
-    field.addEventListener("blur", syncHex);
-    field.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") field.blur();
-    });
+  if (section === "keys") {
+    keymap.show();
+  } else {
+    board.setDisabled([]);
+    paintBoard();
   }
 }
 
@@ -214,12 +121,6 @@ function changed() {
     clearTimeout(autoTimer);
     autoTimer = setTimeout(apply, 400);
   }
-}
-
-function message(text, isError = false) {
-  const el = $("#message");
-  el.textContent = text;
-  el.classList.toggle("error", isError);
 }
 
 async function apply() {
@@ -248,19 +149,6 @@ async function apply() {
   }
 }
 
-async function refreshStatus() {
-  const el = $("#status");
-
-  try {
-    const { connected } = await api("/api/status");
-    el.textContent = connected ? "connected (USB)" : "not found: plug in USB, wired mode";
-    el.className = `status ${connected ? "connected" : "disconnected"}`;
-  } catch {
-    el.textContent = "server offline";
-    el.className = "status disconnected";
-  }
-}
-
 function bindControls() {
   const bottomRow = Math.max(...layout.keys.map((k) => k.y));
   const groups = {
@@ -273,9 +161,13 @@ function bindControls() {
 
   bindHex();
 
-  for (const tab of document.querySelectorAll(".tabs button")) {
+  for (const button of document.querySelectorAll("[data-section]")) {
+    button.addEventListener("click", () => showSection(button.dataset.section));
+  }
+
+  for (const tab of document.querySelectorAll(".tabs button[data-view]")) {
     tab.addEventListener("click", () => {
-      if (tab.dataset.view !== view) select([]);
+      if (tab.dataset.view !== view) board.select([]);
 
       view = tab.dataset.view;
 
@@ -287,7 +179,7 @@ function bindControls() {
   }
 
   for (const button of document.querySelectorAll("[data-select]")) {
-    button.addEventListener("click", () => select(groups[button.dataset.select]));
+    button.addEventListener("click", () => board.select(groups[button.dataset.select]));
   }
 
   for (const color of SWATCHES) {
@@ -303,13 +195,13 @@ function bindControls() {
   }
 
   $("#paint").addEventListener("click", () => {
-    for (const name of selected) state.custom.keys[name] = $("#paint-color").value;
+    for (const name of board.selected) state.custom.keys[name] = $("#paint-color").value;
 
     changed();
   });
 
   $("#unpaint").addEventListener("click", () => {
-    for (const name of selected) delete state.custom.keys[name];
+    for (const name of board.selected) delete state.custom.keys[name];
 
     changed();
   });
@@ -358,20 +250,16 @@ function bindControls() {
       message(error.message, true);
     }
   });
-
-  window.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") select([]);
-  });
 }
 
 [layout, state] = await Promise.all([api("/api/layout"), api("/api/state")]);
 view = state.active;
 
-renderBoard();
+board = initBoard(layout);
+keymap = initKeymap({ api, message, layout, board });
 initScreen({ api, message });
 bindControls();
-syncControls();
-paintBoard();
+showSection(section);
 refreshStatus();
 setInterval(refreshStatus, 5000);
 $("#apply").disabled = true;

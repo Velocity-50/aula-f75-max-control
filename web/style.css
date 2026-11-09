@@ -229,3 +229,40 @@ progress { width: 100%; margin-top: 12px; accent-color: var(--accent); }
 
 .message { min-width: 160px; color: var(--muted); font-size: 12px; text-align: right; }
 .message.error { color: var(--error); }
+
+.switch { display: flex; gap: 2px; padding: 3px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.switch button { border: 0; background: transparent; color: var(--muted); font-weight: 600; }
+.switch button.active { background: var(--surface-2); color: var(--fg); }
+
+.key { flex-direction: column; overflow: hidden; }
+.caption { display: none; margin-top: auto; max-width: 100%; font-size: 9px; font-weight: 500; line-height: 1.15; color: var(--muted); overflow-wrap: anywhere; overflow: hidden; max-height: 2.3em; }
+.board.keys .key { padding: 4px 5px; }
+#macro-list, #action-macro { text-transform: none; }
+.board.keys .caption { display: block; }
+.board.keys .key { background: #24242c; box-shadow: inset 0 -3px 0 #00000055; text-shadow: none; color: var(--fg); }
+.board.keys .key.light { color: var(--fg); }
+.board.keys .key.remapped { background: color-mix(in srgb, var(--accent) 35%, #24242c); border-color: var(--accent); }
+.board.keys .key.remapped .caption { color: var(--fg); }
+.board.keys .key.disabled { opacity: 0.35; cursor: not-allowed; }
+.board.keys .key.disabled:hover { transform: none; }
+
+.group.wide { grid-column: 1 / -1; }
+.group > * + * { margin-top: 10px; }
+.stack { display: flex; flex-direction: column; gap: 8px; }
+.stack[hidden] { display: none; }
+.inline { display: inline-flex; align-items: center; gap: 4px; }
+.grow { flex: 1; }
+input[type="text"], input[type="number"] {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--fg);
+  font: inherit;
+}
+input[type="number"] { width: 90px; }
+
+.events { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
+.event { display: grid; grid-template-columns: 1fr 110px 100px auto; gap: 6px; }
+.event select { text-transform: none; }
+button.recording { background: var(--error); border-color: var(--error); color: #111; font-weight: 600; }

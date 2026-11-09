@@ -1,6 +1,6 @@
 # Protocol research notes
 
-These notes cover keyboard features that this project does not implement yet: key remapping, macros, the knob, and factory reset. They collect what other projects and AULA's software reveal, so nobody has to download and read them again. Implemented features are documented in the code (`protocol.py`) and in the [main README](../README.md).
+These notes cover keyboard protocol research: key remapping and macros (now implemented in `keymap.py` and `protocol.py`), and the knob, factory reset, and screen pages, which are not implemented. They collect what other projects and AULA's software reveal, so nobody has to download and read them again. The [main README](../README.md) documents how to use the implemented features.
 
 | Topic | Keyboard supports it? | Status of the evidence | Notes |
 | --- | --- | --- | --- |

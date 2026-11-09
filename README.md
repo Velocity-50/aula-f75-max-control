@@ -1,6 +1,6 @@
 # AULA F75 Max control
 
-Control the RGB lighting and the screen on an AULA F75 Max keyboard from macOS or Linux. AULA ships its configuration software only for Windows. This project talks to the keyboard directly over USB with a small Python library, and adds a command-line tool and a local web control panel on top.
+Control the RGB lighting, the screen, and the key assignments on an AULA F75 Max keyboard from macOS or Linux. AULA ships its configuration software only for Windows. This project talks to the keyboard directly over USB with a small Python library, and adds a command-line tool and a local web control panel on top.
 
 You can:
 
@@ -8,6 +8,7 @@ You can:
 - Give every key its own colour.
 - Put an image or animated GIF on the keyboard's screen.
 - Sync the clock on the keyboard's screen.
+- Remap keys on the base layer and the Fn layer, and store macros on the keyboard.
 
 ![Per-key colours in the web control panel](assets/Key%20Selection.png)
 
@@ -36,7 +37,7 @@ To update the dependencies, run `uv lock --upgrade` and commit the new `uv.lock`
 
 2. Open <http://127.0.0.1:8075>.
 
-The server listens only on `127.0.0.1`. The dot in the top-right corner turns green when the keyboard is connected.
+The server listens only on `127.0.0.1`. The dot in the top-right corner turns green when the keyboard is connected. The **Lighting** and **Keys** switch at the top picks what you edit.
 
 On the **Per-key** tab:
 
@@ -61,6 +62,16 @@ On the **Screen** tab:
 
 An upload takes about 0.11 seconds per 4 KB chunk. A 28-frame GIF takes about 25 seconds. Lighting changes wait until the upload finishes. **On the keyboard** shows the last image uploaded from this app. The app keeps the exact bytes of that upload in `~/.config/aula-f75max/screen.bin`, so **Upload again** sends the same image without the original file. Each upload rewrites the screen's flash, so prefer the knob when it works.
 
+In **Keys**:
+
+1. Pick the **Base** or **Fn** layer. The Fn layer is active while you hold Fn.
+2. Select keys on the board, then pick an action: **Key** (with optional modifiers; **Press a key** fills it in from your keyboard), **Media**, **Mouse**, **Macro**, **Disable**, or **Default** to undo a remap. Click **Assign to selected keys**. Each key shows what it is assigned to.
+3. Click **Apply** to write both layers and all macros to the keyboard. **Reset layer** returns the layer to the factory assignments.
+
+Under **Macros**, click **New macro**, then **Record** and type the sequence, or add events by hand with a delay after each one. **Record** stores the time between key presses as the delays. Bind the macro to a key with the **Macro** action. A macro can play once, a set number of times, until you press the key again (**toggle**), or while you hold the key. Macro memory is limited; the panel shows how much is used.
+
+Keys that the firmware reserves are greyed out: Fn on both layers, and Backspace on the Fn layer. The keyboard cannot report its key assignments, so the app saves them to `~/.config/aula-f75max/keymap.json`, which `./aula.py remap` uses too.
+
 ## Use the command line
 
 ```sh
@@ -72,9 +83,14 @@ An upload takes about 0.11 seconds per 4 KB chunk. A 28-frame GIF takes about 25
 ./aula.py clock                           # sync the screen clock
 ./aula.py screen eyes.gif --fit cover     # upload an image or GIF to the screen
 ./aula.py screen eyes.gif --preview out.gif  # write what the screen will show, without uploading
+./aula.py remap delete=home --fn delete=delete  # Del sends Home, Fn + Del sends Delete
+./aula.py remap                          # print the saved remaps
+./aula.py remap --reset                  # back to the factory key assignments
 ```
 
 `keys` takes groups of comma-separated key names, each followed by `=RRGGBB`. Keys you leave out get the `--all` colour, or turn off if you omit `--all`. Run `./aula.py keys --help` to list every key name, and `./aula.py light --help` to list the effects.
+
+`remap` takes `KEY=ACTION` pairs for the base layer and `--fn KEY=ACTION` for the Fn layer. An action is a key with optional modifiers (`home`, `ctrl+shift+t`), `media:mute`, `mouse:left`, `macro:1`, `disable`, or `default` to undo a remap. Run `./aula.py remap --help` for the full list. The command adds to the remaps saved in `~/.config/aula-f75max/keymap.json`, which the web control panel shares, and writes both layers and all macros to the keyboard. Macros are created in the web control panel.
 
 ## How images are converted
 
@@ -90,7 +106,8 @@ The 255-frame limit protects the keyboard. The firmware writes the image straigh
 
 - Settings go over the USB cable only. The keyboard keeps them when you switch to Bluetooth or 2.4G.
 - This project cannot change the knob's lighting or function. Nobody has published how.
-- Key remapping and macros are not implemented. A sibling keyboard with the same USB ID supports both, and [docs/](docs/README.md) records their formats from other projects.
+- The firmware ignores a Fn-layer remap of Backspace, so the app does not offer it. Fn itself cannot be remapped. Other keys may be reserved on the Fn layer too; nobody has tested each one.
+- The keyboard cannot report its key assignments. The app writes what `keymap.json` holds, so remaps made by other software are replaced on the next apply.
 - Each upload rewrites the same area of flash. Uploading by hand is fine. Uploading in a tight loop, for example to show live system stats, wears the flash out.
 - The direction values 0 to 3 are passed to the keyboard as-is. Nobody has documented which direction each value selects.
 
@@ -100,13 +117,15 @@ The keyboard (USB ID `0c45:800a`) accepts 64-byte HID feature reports on its ven
 
 - The lighting, clock, per-key, and screen formats come from [mohin7/aula-f75max](https://github.com/mohin7/aula-f75max), [thibaultmiclo/aula-driver](https://github.com/thibaultmiclo/aula-driver), and [VitalyArt/Aula-F75-Max-Driver](https://github.com/VitalyArt/Aula-F75-Max-Driver). The screen upload, 16-bit colour, and 2 ms frame-delay units were confirmed on the keyboard.
 - The LED number for each key comes from `layouts/rgb-keyboard.xml` in AULA's F75 Max Windows driver, version 1.0.0.5. That file leaves out the right Ctrl key. Its LED number, 98, was found by testing on the keyboard.
+- Remaps and macros use the formats from [thibaultmiclo/aula-driver](https://github.com/thibaultmiclo/aula-driver), written for the EA75MAX. A key's remap slot is its LED number. Both were confirmed on the keyboard; [docs/keymap.md](docs/keymap.md) and [docs/macros.md](docs/macros.md) record the tests.
 
 A screen upload uses a second interface (usage page `0xFF68`). After a header command on the main interface, the image goes over in 4096-byte output reports, and the keyboard acknowledges each one.
 
 | File | Contents |
 | --- | --- |
 | `aula.py` | Command-line tool |
-| `protocol.py` | USB protocol: lighting, per-key colours, clock, and screen upload |
+| `protocol.py` | USB protocol: lighting, per-key colours, clock, screen upload, remaps, and macros |
+| `keymap.py` | Remap actions, macro events, and their encoding; saves `keymap.json` |
 | `layout.py` | Key positions, LED numbers, and effect names |
 | `screen.py` | Image and GIF conversion for the screen |
 | `server.py` | FastAPI server for the web control panel |

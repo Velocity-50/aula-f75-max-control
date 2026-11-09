@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Controls an AULA F75 Max keyboard (USB `0c45:800a`) from macOS or Linux over HID, replacing AULA's Windows-only software. Features: 20 firmware lighting effects, per-key RGB, screen clock sync, and image/GIF uploads to the 128×128 screen. Two front ends share one protocol library: a CLI (`aula.py`) and a local FastAPI web UI (`server.py` + `web/`). `README.md` is the user-facing doc; keep it in sync with behaviour changes.
+Controls an AULA F75 Max keyboard (USB `0c45:800a`) from macOS or Linux over HID, replacing AULA's Windows-only software. Features: 20 firmware lighting effects, per-key RGB, screen clock sync, image/GIF uploads to the 128×128 screen, and key remaps (base and Fn layers) with macros. Two front ends share one protocol library: a CLI (`aula.py`) and a local FastAPI web UI (`server.py` + `web/`). `README.md` is the user-facing doc; keep it in sync with behaviour changes.
 
 ## Architecture & Data Flow
 
@@ -10,15 +10,17 @@ Controls an AULA F75 Max keyboard (USB `0c45:800a`) from macOS or Linux over HID
 layout.py   (data: MODES, LAYOUT, LEDS)        no project imports
 protocol.py (HID: Keyboard, constants)          imports hid only
 screen.py   (Pillow: image → screen stream)     imports protocol constants, never the device
-aula.py     (CLI)        → layout, protocol, screen
-server.py   (FastAPI)    → layout, protocol, screen   → serves web/ statically
+keymap.py   (pydantic: remaps, macros → bytes)  imports layout, protocol constants, never the device
+aula.py     (CLI)        → layout, protocol, screen, keymap
+server.py   (FastAPI)    → layout, protocol, screen, keymap   → serves web/ statically
 ```
 
-- **Command channel** (usage page `0xFF13`): 64-byte feature reports, 35 ms (`DELAY`) before each send/read. Every operation is `04 18` begin → select block (`04 13` lighting, `04 23` per-key table, `04 28` clock, `04 72` screen header; `fields[8]` = page/chunk count) → data → `04 02` apply (some flows end with `04 F0`). `send_ack` requires reply byte 3 == `0x01`. Build packets with `packet(0x04, cmd, fields={offset: value})`.
+- **Command channel** (usage page `0xFF13`): 64-byte feature reports, 35 ms (`DELAY`) before each send/read. Every operation is `04 18` begin → select block (`04 13` lighting, `04 23` per-key table, `04 11`/`04 27` base/Fn remap table, `04 28` clock, `04 72` screen header; `fields[8]` = page/chunk count) → data → `04 02` apply (some flows end with `04 F0`). 576-byte tables go through `Keyboard.write_table`. Macros differ: `04 19` → `04 15` → buffer → `04 02`, no begin/finalize. `send_ack` requires reply byte 3 == `0x01`. Build packets with `packet(0x04, cmd, fields={offset: value})`.
 - **Display channel** (usage page `0xFF68`): `Keyboard.upload_screen` opens a second HID handle and writes 4096-byte output reports, reading one ack per chunk.
 - **Web lighting apply**: `PUT /api/state` → pydantic `State` → `with_keyboard()` → `kb.lighting(...)` or `kb.per_key(...)` → on success, persist to `~/.config/aula-f75max/state.json`. The keyboard cannot report its config, so that file is the source of truth for the UI.
 - **Screen upload**: `POST /api/screen?fit=` (raw file body) → `screen.load/encode/preview` in a threadpool → `begin_upload` → daemon thread `run_upload` holds `device_lock` and updates the module-level `upload` dict → client polls `GET /api/screen` (adds `saved`) every 500 ms → on success writes `~/.config/aula-f75max/screen.gif` (preview) and `screen.bin` (exact stream). `POST /api/screen/resend` sends `screen.bin` again through `begin_upload`. No known command selects the screen page; the user switches to the image with Fn + knob, then turns the knob.
-- **CLI**: argparse subcommands `light | keys | clock | screen`; open `Keyboard()`, run, `kb.close()` in `finally`, print `ok`.
+- **Keymap apply**: `PUT /api/keymap` (or `aula.py remap`) → `keymap.Keymap` (actions discriminated by `kind`; validators reject reserved keys in `keymap.RESERVED`, dangling macro indices, and over-budget macros) → `Keymap.encode()` → `kb.keymap(macros, base, fn)` writes all three every time → on success `keymap.save()` to `~/.config/aula-f75max/keymap.json`, shared by the CLI and web UI. A key's remap slot is its LED number. Layer keys are physical `LEDS` names; action/macro keys are `keymap.KEYS` names.
+- **CLI**: argparse subcommands `light | keys | clock | screen | remap`; open `Keyboard()`, run, `kb.close()` in `finally`, print `ok`. `remap` with no arguments prints `keymap.json` without opening the device.
 
 ### Hardware safety invariants (do not weaken)
 
@@ -30,9 +32,9 @@ server.py   (FastAPI)    → layout, protocol, screen   → serves web/ statical
 ## Key Directories
 
 - `/` (repo root): all Python modules; no package directory.
-- `web/`: vanilla ES modules, no bundler. `app.js` handles lighting, keyboard rendering, tabs, and apply; `screen.js` exports `initScreen({ api, message })` for the Screen tab; `style.css` holds theme variables.
+- `web/`: vanilla ES modules, no bundler. `app.js` handles the Lighting/Keys section switch, lighting state, tabs, and apply; `board.js` renders the shared board and selection; `api.js` (`api`, `message`, status), `hex.js` (colour fields); `screen.js` exports `initScreen({ api, message })` for the Screen tab; `keymap.js` (`initKeymap`) and `macros.js` (`initMacros`) drive the Keys section, with `options.js` indexing `GET /api/keymap/options` by `KeyboardEvent.code` and reading held modifiers; `style.css` holds theme variables.
 - `assets/`: README screenshots (filenames contain spaces; link as `assets/Key%20Selection.png`).
-- `docs/`: protocol research for unimplemented features (keymap, macros, knob, factory reset), with sources. Mostly from the EA75MAX sibling; facts there are unverified on the F75 Max until tested.
+- `docs/`: protocol research (keymap, macros, knob, factory reset, screen pages), with sources and F75 Max hardware test results. Facts copied from the EA75MAX sibling are unverified on the F75 Max until a test section says otherwise.
 
 ## Development Commands
 
@@ -89,9 +91,10 @@ Run scripts from the repo root; `uv` finds the project from the cwd. From elsewh
   ```sh
   ./aula.py --help
   ./aula.py screen FILE --preview /tmp/out.gif
-  uv run python -m py_compile aula.py server.py protocol.py layout.py screen.py
-  node --check web/app.js && node --check web/screen.js
+  HOME=$(mktemp -d) ./aula.py remap         # prints the keymap; parse/validation errors exit before the device
+  uv run python -m py_compile aula.py server.py protocol.py layout.py screen.py keymap.py
+  for f in web/*.js; do node --check "$f"; done
   ```
-- Pure, hardware-free units: `screen.normalize/encode/rgb565/load/preview`, `protocol.packet/screen_chunks`, `server.layout`, the pydantic models, and `GET /api/layout` / `POST /api/screen/preview`.
-- Hardware behaviour was verified on the real keyboard. Commands that write to it change the user's lighting or screen: prefer `--preview`. To restore lighting after a test, re-PUT the saved `GET /api/state`. Test new screen-protocol changes with a single still frame (9 chunks) before a full GIF. The CLI warns if acked chunks ≠ total.
+- Pure, hardware-free units: `screen.normalize/encode/rgb565/load/preview`, `protocol.packet/screen_chunks`, `keymap.Keymap.encode/layer_table/macro_buffer` (byte-identical to thibaultmiclo's `remap_table`/`macro_buffer`), `server.layout`, the pydantic models, and `GET /api/layout` / `GET /api/keymap/options` / `POST /api/screen/preview`.
+- Hardware behaviour was verified on the real keyboard. Commands that write to it change the user's lighting, screen, or key assignments: prefer `--preview`. To restore lighting after a test, re-PUT the saved `GET /api/state`; to restore keys, re-PUT `GET /api/keymap`. Test a new Fn-layer key with a one-key write first; the firmware silently ignores reserved slots (Backspace). Test new screen-protocol changes with a single still frame (9 chunks) before a full GIF. The CLI warns if acked chunks ≠ total.
 - Verify UI changes in a real browser against a running `./server.py`.

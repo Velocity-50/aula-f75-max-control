@@ -9,6 +9,10 @@
 <body>
   <header>
     <h1>AULA F75 Max</h1>
+    <nav class="switch">
+      <button data-section="lighting">Lighting</button>
+      <button data-section="keys">Keys</button>
+    </nav>
     <span id="status" class="status">checking…</span>
   </header>
 
@@ -19,122 +23,185 @@
     </section>
 
     <section class="panel">
-      <nav class="tabs">
-        <button data-view="custom">Per-key</button>
-        <button data-view="effect">Effect</button>
-        <button data-view="screen">Screen</button>
-      </nav>
+      <div id="lighting-section">
+        <nav class="tabs">
+          <button data-view="custom">Per-key</button>
+          <button data-view="effect">Effect</button>
+          <button data-view="screen">Screen</button>
+        </nav>
 
-      <div id="custom-panel" class="controls">
-        <div class="group">
-          <h2>Selection</h2>
-          <div class="buttons" id="select-buttons">
-            <button data-select="all">All</button>
-            <button data-select="none">None</button>
-            <button data-select="top">Top row</button>
-            <button data-select="home">Home row</button>
-            <button data-select="bottom">Bottom row</button>
-            <button data-select="arrows">Arrows</button>
-            <button data-select="wasd">WASD</button>
+        <div id="custom-panel" class="controls">
+          <div class="group">
+            <h2>Selection</h2>
+            <div class="buttons" id="select-buttons">
+              <button data-select="all">All</button>
+              <button data-select="none">None</button>
+              <button data-select="top">Top row</button>
+              <button data-select="home">Home row</button>
+              <button data-select="bottom">Bottom row</button>
+              <button data-select="arrows">Arrows</button>
+              <button data-select="wasd">WASD</button>
+            </div>
+          </div>
+
+          <div class="group">
+            <h2>Key colour</h2>
+            <div class="buttons">
+              <input type="color" id="paint-color" value="#00ffff">
+              <input type="text" class="hex" data-for="paint-color" aria-label="key colour hex">
+              <button id="paint" class="primary-outline">Paint selected</button>
+              <button id="unpaint">Reset to default</button>
+            </div>
+            <div id="swatches" class="swatches"></div>
+          </div>
+
+          <div class="group">
+            <h2>Default colour</h2>
+            <div class="buttons">
+              <input type="color" id="base-color">
+              <input type="text" class="hex" data-for="base-color" aria-label="default colour hex">
+              <span class="note">used by every key without its own colour</span>
+            </div>
+          </div>
+
+          <div class="group">
+            <h2>Brightness <output id="custom-brightness-out"></output></h2>
+            <input type="range" id="custom-brightness" min="1" max="5">
           </div>
         </div>
 
-        <div class="group">
-          <h2>Key colour</h2>
-          <div class="buttons">
-            <input type="color" id="paint-color" value="#00ffff">
-            <input type="text" class="hex" data-for="paint-color" aria-label="key colour hex">
-            <button id="paint" class="primary-outline">Paint selected</button>
-            <button id="unpaint">Reset to default</button>
+        <div id="effect-panel" class="controls">
+          <div class="group">
+            <h2>Effect</h2>
+            <select id="effect-mode"></select>
           </div>
-          <div id="swatches" class="swatches"></div>
+
+          <div class="group">
+            <h2>Colour</h2>
+            <div class="buttons">
+              <input type="color" id="effect-color">
+              <input type="text" class="hex" data-for="effect-color" aria-label="effect colour hex">
+              <label><input type="checkbox" id="effect-rainbow"> Rainbow</label>
+            </div>
+          </div>
+
+          <div class="group">
+            <h2>Brightness <output id="effect-brightness-out"></output></h2>
+            <input type="range" id="effect-brightness" min="1" max="5">
+          </div>
+
+          <div class="group">
+            <h2>Speed <output id="effect-speed-out"></output></h2>
+            <input type="range" id="effect-speed" min="1" max="5">
+          </div>
+
+          <div class="group">
+            <h2>Direction</h2>
+            <select id="effect-direction">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
+          </div>
         </div>
 
-        <div class="group">
-          <h2>Default colour</h2>
-          <div class="buttons">
-            <input type="color" id="base-color">
-            <input type="text" class="hex" data-for="base-color" aria-label="default colour hex">
-            <span class="note">used by every key without its own colour</span>
-          </div>
-        </div>
+        <div id="screen-panel" class="controls">
+          <div class="group">
+            <h2>Image</h2>
+            <label id="screen-drop" class="drop">
+              <input type="file" id="screen-file" accept="image/*" hidden>
+              <span id="screen-drop-text">Drop a GIF or image here, or click to choose</span>
+            </label>
 
-        <div class="group">
-          <h2>Brightness <output id="custom-brightness-out"></output></h2>
-          <input type="range" id="custom-brightness" min="1" max="5">
+            <h2 class="spaced">Fit</h2>
+            <select id="screen-fit">
+              <option value="contain">Contain (letterbox)</option>
+              <option value="cover">Cover (crop to fill)</option>
+              <option value="stretch">Stretch</option>
+            </select>
+
+            <div class="buttons spaced">
+              <button id="screen-upload" class="primary" disabled>Upload to keyboard</button>
+            </div>
+            <progress id="screen-progress" max="1" value="0" hidden></progress>
+            <p id="screen-status" class="note"></p>
+          </div>
+
+          <div class="group">
+            <h2>Preview</h2>
+            <div class="screen-frame"><img id="screen-preview" alt="" hidden></div>
+            <p id="screen-info" class="note">Shown in the screen's 16-bit colour.</p>
+          </div>
+
+          <div class="group">
+            <h2>On the keyboard</h2>
+            <div class="screen-frame"><img id="screen-current" alt="" hidden></div>
+            <p class="note">Last upload from this app. If the keyboard shows the clock instead, press <b>Fn</b> and the knob to switch the knob to screen control, then turn it to the image page. Or upload the image again.</p>
+            <div class="buttons spaced">
+              <button id="screen-resend" disabled>Upload again</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div id="effect-panel" class="controls">
-        <div class="group">
-          <h2>Effect</h2>
-          <select id="effect-mode"></select>
-        </div>
+      <div id="keys-section" hidden>
+        <nav class="tabs">
+          <button data-layer="base">Base</button>
+          <button data-layer="fn">Fn</button>
+        </nav>
 
-        <div class="group">
-          <h2>Colour</h2>
-          <div class="buttons">
-            <input type="color" id="effect-color">
-            <input type="text" class="hex" data-for="effect-color" aria-label="effect colour hex">
-            <label><input type="checkbox" id="effect-rainbow"> Rainbow</label>
+        <div class="controls">
+          <div class="group">
+            <h2>Action</h2>
+            <p id="keys-selection" class="note"></p>
+            <select id="action-kind">
+              <option value="default">Default</option>
+              <option value="key">Key</option>
+              <option value="media">Media</option>
+              <option value="mouse">Mouse</option>
+              <option value="macro">Macro</option>
+              <option value="disable">Disable</option>
+            </select>
+
+            <div class="stack" data-kind-panel="key">
+              <select id="action-key"></select>
+              <div class="buttons" id="action-mods"></div>
+              <button id="capture">Press a key</button>
+            </div>
+            <div class="stack" data-kind-panel="media">
+              <select id="action-media"></select>
+            </div>
+            <div class="stack" data-kind-panel="mouse">
+              <select id="action-mouse"></select>
+            </div>
+            <div class="stack" data-kind-panel="macro">
+              <select id="action-macro"></select>
+              <select id="action-mode"></select>
+              <label class="inline">Repeat <input type="number" id="action-count" min="1" max="255" value="1"></label>
+            </div>
+
+            <button id="assign" class="primary-outline">Assign to selected keys</button>
           </div>
-        </div>
 
-        <div class="group">
-          <h2>Brightness <output id="effect-brightness-out"></output></h2>
-          <input type="range" id="effect-brightness" min="1" max="5">
-        </div>
-
-        <div class="group">
-          <h2>Speed <output id="effect-speed-out"></output></h2>
-          <input type="range" id="effect-speed" min="1" max="5">
-        </div>
-
-        <div class="group">
-          <h2>Direction</h2>
-          <select id="effect-direction">
-            <option value="0">0</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-          </select>
-        </div>
-      </div>
-
-      <div id="screen-panel" class="controls">
-        <div class="group">
-          <h2>Image</h2>
-          <label id="screen-drop" class="drop">
-            <input type="file" id="screen-file" accept="image/*" hidden>
-            <span id="screen-drop-text">Drop a GIF or image here, or click to choose</span>
-          </label>
-
-          <h2 class="spaced">Fit</h2>
-          <select id="screen-fit">
-            <option value="contain">Contain (letterbox)</option>
-            <option value="cover">Cover (crop to fill)</option>
-            <option value="stretch">Stretch</option>
-          </select>
-
-          <div class="buttons spaced">
-            <button id="screen-upload" class="primary" disabled>Upload to keyboard</button>
-          </div>
-          <progress id="screen-progress" max="1" value="0" hidden></progress>
-          <p id="screen-status" class="note"></p>
-        </div>
-
-        <div class="group">
-          <h2>Preview</h2>
-          <div class="screen-frame"><img id="screen-preview" alt="" hidden></div>
-          <p id="screen-info" class="note">Shown in the screen's 16-bit colour.</p>
-        </div>
-
-        <div class="group">
-          <h2>On the keyboard</h2>
-          <div class="screen-frame"><img id="screen-current" alt="" hidden></div>
-          <p class="note">Last upload from this app. If the keyboard shows the clock instead, press <b>Fn</b> and the knob to switch the knob to screen control, then turn it to the image page. Or upload the image again.</p>
-          <div class="buttons spaced">
-            <button id="screen-resend" disabled>Upload again</button>
+          <div class="group wide">
+            <h2>Macros</h2>
+            <p id="macro-budget" class="note"></p>
+            <div class="buttons">
+              <select id="macro-list" class="grow"></select>
+              <button id="macro-add">New macro</button>
+              <button id="macro-delete">Delete</button>
+            </div>
+            <div id="macro-editor" class="stack">
+              <input type="text" id="macro-name" placeholder="Macro name" maxlength="40">
+              <div id="macro-events" class="events"></div>
+              <div class="buttons">
+                <button id="macro-add-event">Add event</button>
+                <button id="macro-add-click">Add mouse click</button>
+                <button id="macro-record">Record</button>
+                <button id="macro-clear">Clear events</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -142,6 +209,8 @@
       <footer class="actions">
         <label class="lighting-only"><input type="checkbox" id="auto-apply"> Auto-apply</label>
         <button id="clock">Sync clock</button>
+        <button id="keys-reset" class="keys-only">Reset layer</button>
+        <button id="keys-apply" class="primary keys-only">Apply</button>
         <button id="apply" class="primary lighting-only">Apply</button>
         <span id="message" class="message"></span>
       </footer>
