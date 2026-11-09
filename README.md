@@ -109,7 +109,7 @@ Click **Config** at the top, then the **Settings** tab, change any of these, and
 | **Sleep after** | Idle time before the keyboard sleeps in 2.4G or Bluetooth mode: never, 1, 5, or 30 minutes. The firmware offers nothing longer than 30 minutes except never. | 5 minutes |
 | **Key response** | Debounce level 1 to 5. 1 is fastest; raise it if keys double-type. | 2 |
 | **Block keys** | Disables the Win key, Alt+F4, or Alt+Tab, for example so a game isn't closed or left by accident | All off |
-| **Fn switch** | Probably swaps the top row between F1–F12 and media keys. Not yet tested on this keyboard. | Off |
+| **Fn switch** | When on, the top row sends media keys without holding Fn. When off, it sends F1–F12. Tested on macOS. | Off |
 
 The keyboard takes all of these in one message, so **Apply** writes every setting at once. It cannot report them back, so the server saves them to the `settings` part of `~/.config/aula-f75max/state.json` and the page starts from those values, or from the factory defaults if nothing was saved. Settings changed with other software are replaced on the next apply.
 
