@@ -1,6 +1,6 @@
 # Macros
 
-The keyboard stores up to 100 macros in one buffer and plays them without the computer. A key plays a macro when its remap slot points at that macro (see [keymap.md](keymap.md)). Source: thibaultmiclo/aula-driver, `aula/protocol.py` (`macro_buffer`, `Keyboard.set_macros`), which follows the vendor serialiser (`DeviceDriver.exe` function at `0x42d5d0`). That project tested macros on an EA75MAX. Nobody has tested them on an F75 Max.
+The keyboard stores up to 100 macros in one buffer and plays them without the computer. A key plays a macro when its remap slot points at that macro (see [keymap.md](keymap.md)). Source: thibaultmiclo/aula-driver, `aula/protocol.py` (`macro_buffer`, `Keyboard.set_macros`), which follows the vendor serialiser (`DeviceDriver.exe` function at `0x42d5d0`). That project tested macros on an EA75MAX. They also work on the F75 Max; see [Tested on the F75 Max](#tested-on-the-f75-max).
 
 ## Upload the buffer
 
@@ -14,6 +14,12 @@ The upload differs from other blocks: no `04 18` begin and no `04 F0` finalize.
 | 4 | Wait 30 ms, then `04 02` apply | Yes |
 
 Every upload replaces all macros. Upload the full set each time.
+
+On the F75 Max, the read after the last buffer report returns all zeros.
+
+## Tested on the F75 Max
+
+Tested on 2026-11-09 with a one-off script. It uploaded one macro, `h` down, `h` up, `i` down, `i` up with 10 ms delays (an 8-report buffer), and then wrote a Fn-layer table with J (62) set to `06 00 00 01` (macro 0, play once). Fn + J typed `hi`. The other play modes were not tested.
 
 ## Buffer layout
 

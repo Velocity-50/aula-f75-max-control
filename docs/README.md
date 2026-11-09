@@ -5,7 +5,7 @@ These notes cover keyboard features that this project does not implement yet: ke
 | Topic | Keyboard supports it? | Status of the evidence | Notes |
 | --- | --- | --- | --- |
 | Key remap, base layer and Fn layer | Yes | Tested on the F75 Max, one key at a time. Backspace cannot be set on the Fn layer | [keymap.md](keymap.md) |
-| Macros stored on the keyboard | Yes | Byte format known and tested on hardware, on the EA75MAX sibling (same USB ID). Not tested on the F75 Max | [macros.md](macros.md) |
+| Macros stored on the keyboard | Yes | Tested on the F75 Max: one macro played once from a Fn-layer key | [macros.md](macros.md) |
 | Knob rotation and press | Unknown | Input codes known. No write format known | [knob.md](knob.md) |
 | Factory reset | Partly | A reset sequence exists. A user reports that it leaves screen images and settings in place | [reset.md](reset.md) |
 | Choosing the screen page from the computer | Unknown | No source has a command. On the keyboard, Fn + knob and then turning the knob switches pages (confirmed on hardware) | [screen-pages.md](screen-pages.md) |
