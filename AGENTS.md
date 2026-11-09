@@ -40,7 +40,7 @@ server.py   (FastAPI)    → layout, protocol, screen, keymap   → serves web/ 
 
 ```sh
 uv sync                                   # create .venv (editor support); scripts also auto-sync
-./server.py                               # web UI at http://127.0.0.1:8075 (localhost only)
+./server.py                               # web UI at http://127.0.0.1:8075 (localhost only); --port N, --help
 ./aula.py light rolling -r -s 4           # effects: ./aula.py light --help
 ./aula.py keys --all 8000ff a,s,d,f=00ffff
 ./aula.py clock
@@ -82,7 +82,7 @@ Run scripts from the repo root; `uv` finds the project from the cwd. From elsewh
 - No front-end build step or `package.json`. Keep `web/` as plain ES modules served by FastAPI.
 - Tested on macOS; Linux needs read/write access to `/dev/hidraw*` (untested).
 - Config only works over the USB cable in wired mode; Bluetooth exposes no configuration channel and the 2.4G receiver is unsupported.
-- The server binds `127.0.0.1:8075`. Stop any server you start; a leftover process blocks the port.
+- The server binds `127.0.0.1:8075` (`--port` changes the port; the host stays localhost). Stop any server you start; a leftover process blocks the port.
 
 ## Testing & QA
 

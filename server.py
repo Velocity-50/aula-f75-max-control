@@ -1,6 +1,7 @@
 #!/usr/bin/env -S uv run
-"""Local web UI for the AULA F75 Max: ./server.py, then open http://127.0.0.1:8075"""
+"""Local web UI for the AULA F75 Max: ./server.py [--port PORT], then open http://127.0.0.1:8075"""
 
+import argparse
 import base64
 import threading
 from datetime import datetime
@@ -27,6 +28,7 @@ SCREEN_FILE = CONFIG_DIR / "screen.gif"  # preview of the last image uploaded to
 SCREEN_STREAM = CONFIG_DIR / "screen.bin"  # exact bytes of that upload, for sending it again
 SECONDS_PER_CHUNK = 0.11  # measured: 225 chunks in 24 s
 WEB_DIR = Path(__file__).parent / "web"
+HOST, DEFAULT_PORT = "127.0.0.1", 8075
 
 Color = Annotated[str, Field(pattern=r"^#[0-9a-fA-F]{6}$")]
 Level = Annotated[int, Field(ge=1, le=5)]
@@ -287,5 +289,24 @@ class Static(StaticFiles):
 
 app.mount("/", Static(directory=WEB_DIR, html=True), name="web")
 
+
+def port(value: str) -> int:
+    number = int(value)
+
+    if not 1 <= number <= 65535:
+        raise argparse.ArgumentTypeError(f"expected 1-65535, got {number}")
+
+    return number
+
+
+def main():
+    parser = argparse.ArgumentParser(description=f"Local web UI for the AULA F75 Max. Listens on {HOST} only.",
+                                     epilog=f"Settings, remaps, and the last screen upload are saved in {CONFIG_DIR}.")
+    parser.add_argument("-p", "--port", type=port, default=DEFAULT_PORT, help=f"port to listen on (default {DEFAULT_PORT})")
+    args = parser.parse_args()
+
+    uvicorn.run(app, host=HOST, port=args.port)
+
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8075)
+    main()

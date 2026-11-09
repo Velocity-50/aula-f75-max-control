@@ -37,7 +37,7 @@ To update the dependencies, run `uv lock --upgrade` and commit the new `uv.lock`
 
 2. Open <http://127.0.0.1:8075>.
 
-The server listens only on `127.0.0.1`. The dot in the top-right corner turns green when the keyboard is connected. The **Lighting** and **Keys** switch at the top picks what you edit.
+The server listens only on `127.0.0.1`. To use another port, run `./server.py --port 8080`; `./server.py --help` lists the options. The dot in the top-right corner turns green when the keyboard is connected. The **Lighting** and **Keys** switch at the top picks what you edit.
 
 On the **Per-key** tab:
 
