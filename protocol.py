@@ -15,7 +15,9 @@ PACKET = 64
 DELAY = 0.035
 
 CUSTOM_MODE = 0x80
-TABLE_SIZE = 0x240  # 144 slots of (index, r, g, b), sent as 9 pages
+TABLE_SIZE = 0x240  # 144 four-byte slots (per-key colour or remap), sent as 9 pages
+BLOCK_COLORS, BLOCK_REMAP_BASE, BLOCK_REMAP_FN = 0x23, 0x11, 0x27
+MACRO_BUFFER_MAX = 0xE00
 
 DISPLAY_USAGE_PAGE = 0xFF68
 SCREEN_SIZE = 128
@@ -123,17 +125,36 @@ class Keyboard:
             table[idx * 4 : idx * 4 + 4] = bytes((idx, *rgb))
 
         table[-2:] = b"\xaa\x55"
+        self.write_table(BLOCK_COLORS, bytes(table))
 
+    def write_table(self, block: int, table: bytes):
         self.send_ack(packet(0x04, 0x18))
-        self.send_ack(packet(0x04, 0x23, fields={8: TABLE_SIZE // PACKET}))
+        self.send_ack(packet(0x04, block, fields={8: TABLE_SIZE // PACKET}))
 
         for offset in range(0, TABLE_SIZE, PACKET):
-            self.send(bytes(table[offset : offset + PACKET]))
+            self.send(table[offset : offset + PACKET])
 
         self.read()  # last page is read back before apply
         self.send_ack(packet(0x04, 0x02))
         self.send(packet(0x04, 0xF0))
         self.read()
+
+    def keymap(self, macros: bytes, base: bytes, fn: bytes):
+        """Replace all macros, then both remap layers; see keymap.Keymap.encode."""
+        if len(macros) % PACKET or len(macros) > MACRO_BUFFER_MAX:
+            raise ValueError(f"invalid macro buffer: {len(macros)} bytes")
+
+        # no 04 18 begin or 04 F0 finalize for macros
+        self.send_ack(packet(0x04, 0x19))
+        self.send_ack(packet(0x04, 0x15, fields={8: len(macros) // PACKET}))
+
+        for offset in range(0, len(macros), PACKET):
+            self.send(macros[offset : offset + PACKET])
+
+        self.read()
+        self.send_ack(packet(0x04, 0x02))
+        self.write_table(BLOCK_REMAP_BASE, base)
+        self.write_table(BLOCK_REMAP_FN, fn)
 
     def upload_screen(self, stream: bytes, progress=None) -> int:
         """Write an encoded screen stream; returns how many chunks the keyboard acknowledged."""

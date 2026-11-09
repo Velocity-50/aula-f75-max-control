@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from PIL import UnidentifiedImageError
 from pydantic import BaseModel, Field, field_validator
 
+import keymap
 import protocol
 import screen
 from layout import LAYOUT, LEDS, MODES
@@ -187,6 +188,24 @@ def put_state(state: State) -> State:
     STATE_FILE.write_text(state.model_dump_json(indent=2))
 
     return state
+
+
+@app.get("/api/keymap/options")
+def get_keymap_options():
+    return keymap.options()
+
+
+@app.get("/api/keymap")
+def get_keymap() -> keymap.Keymap:
+    return keymap.load()
+
+
+@app.put("/api/keymap")
+def put_keymap(new: keymap.Keymap) -> keymap.Keymap:
+    with_keyboard(lambda kb: kb.keymap(*new.encode()))
+    keymap.save(new)
+
+    return new
 
 
 @app.post("/api/clock")
