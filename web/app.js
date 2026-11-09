@@ -7,7 +7,7 @@ import { initSettings } from "./settings.js";
 
 const $ = (selector) => document.querySelector(selector);
 
-const SWATCHES = ["#ffffff", "#ff0000", "#ff4000", "#ffd400", "#00ff00", "#00ffff", "#0080ff", "#8000ff", "#ff00ff", "#ff1493"];
+const SWATCHES = ["#ffffff", "#ff0000", "#ff4000", "#ffd400", "#00ff00", "#00ffff", "#0080ff", "#8000ff", "#ff00ff"];
 const GROUPS = {
   home: ["a", "s", "d", "f", "j", "k", "l", "semicolon"],
   arrows: ["up", "left", "down", "right"],
