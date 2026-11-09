@@ -1,6 +1,6 @@
 # Screen pages
 
-The screen shows one page at a time. The home page shows the clock, date, battery, connection, and lock states. Other pages hold the uploaded image and the settings menu. Nobody has published a command that picks the page from the computer.
+The screen shows one page at a time. The home page shows the clock, date, battery, connection, and lock states. Other pages hold the uploaded image and the settings menu. Clock sync switches to the clock page (see below). No command is known that switches to the image page.
 
 ## Switch pages on the keyboard
 
@@ -18,9 +18,22 @@ Pressing the knob without **Fn** only sends mute. This procedure was confirmed o
 
 ## What sends the screen back to the clock
 
-No source says. Uploads survive power cycles and the factory reset ([VitalyArt issue #20](https://github.com/VitalyArt/Aula-F75-Max-Driver/issues/20)), so a return to the clock is a page change, not lost data. Likely triggers are waking from sleep (the default is 5 minutes idle) and power cycles. Neither is confirmed.
+**Clock sync does.** On 2026-11-09, `POST /api/clock` (the same exchange as `aula.py clock`) switched an F75 Max from the image page to the clock page. Our time report starts `00 01 5A`, so byte 1 is `01`. **Sync clock** in the web UI and `aula.py clock` therefore hide the uploaded image until you turn the knob back to it.
+
+Uploads survive power cycles and the factory reset ([VitalyArt issue #20](https://github.com/VitalyArt/Aula-F75-Max-Driver/issues/20)), so other returns to the clock are page changes, not lost data. Other likely triggers are waking from sleep (the default is 5 minutes idle) and power cycles. Neither is confirmed.
+
+## Playback glitches in wired mode
+
+In wired USB mode, the keyboard sometimes corrupts frames as it plays an animation. The bad frames differ from loop to loop: a frame goes wrong from some row to the bottom, or a whole frame is wrong, and the next loop is clean. With the 2.4G receiver, the same upload plays cleanly. Reported on 2026-11-09.
+
+The glitches happen whether or not any program on the computer talks to the keyboard. Thirty-second tests with `hid.enumerate` loops, the web server, and the CLI seemed at first to show a link to the server, but the glitches come and go on their own, and later watching showed them without any of these running. So this project's software is not the cause.
+
+The stored data is fine: `screen.bin` decodes cleanly, every upload chunk was acked, and four independent encoders (this project, VitalyArt, mohin7, stimong's F75Probe) build the same stream layout. The cause is somewhere in wired operation: USB power, or the keyboard servicing USB traffic from macOS while it reads frames from flash. A different cable, port, or powered hub has not been tried.
+
+Configuration only works over the cable, so upload in wired mode, then switch to the 2.4G receiver for clean playback.
 
 ## Open questions
 
-- Whether a different byte 1 in the clock report changes the page. A test costs nothing in flash: send the clock sync with `02` there and watch the screen.
+- Whether a different byte 1 in the clock report changes the page, for example to the image page. A test costs nothing in flash: send the clock sync with `02` there and watch the screen.
 - Whether the settings block `04 17` has a page field. Bytes 7 and 9 to 61 of its report have no known meaning.
+- Why wired mode corrupts playback, and whether a different cable, port, or powered hub changes it.

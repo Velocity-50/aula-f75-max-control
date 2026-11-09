@@ -28,6 +28,7 @@ server.py   (FastAPI)    → layout, protocol, screen, keymap   → serves web/ 
 - Frame delays are one byte in 2 ms units, clamped to 30–500 ms (`screen.MIN_DELAY/MAX_DELAY`); longer frames are split into repeats.
 - Repeated uploads wear flash. Don't build anything that uploads in a loop (for example live stats).
 - One device user at a time: `device_lock`; lighting endpoints return 409 while `upload["state"] == "uploading"`.
+- In wired USB mode, screen animations glitch (corrupted frames that change every loop) whether or not any software talks to the keyboard; with the 2.4G receiver they play cleanly. Not caused by this project; don't chase it in the code. Details: `docs/screen-pages.md`.
 
 ## Key Directories
 
