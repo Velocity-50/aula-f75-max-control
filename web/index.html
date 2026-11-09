@@ -19,7 +19,10 @@
   <main>
     <section class="board-wrap">
       <div id="board" class="board"></div>
-      <p class="hint">Click or drag to select keys · Esc clears the selection</p>
+      <p class="hint selection-bar">
+        <span id="selection">Click or drag to select keys · Esc clears the selection</span>
+        <button id="select-none" disabled>Select none</button>
+      </p>
     </section>
 
     <section class="panel">
@@ -35,7 +38,6 @@
             <h2>Selection</h2>
             <div class="buttons" id="select-buttons">
               <button data-select="all">All</button>
-              <button data-select="none">None</button>
               <button data-select="top">Top row</button>
               <button data-select="home">Home row</button>
               <button data-select="bottom">Bottom row</button>

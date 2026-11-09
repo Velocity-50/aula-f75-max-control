@@ -276,7 +276,16 @@ def current_screen():
     return FileResponse(SCREEN_FILE, media_type="image/gif", headers={"cache-control": "no-store"})
 
 
-app.mount("/", StaticFiles(directory=WEB_DIR, html=True), name="web")
+class Static(StaticFiles):
+    # browsers otherwise guess a cache lifetime and pair a new app.js with an old style.css
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        response.headers["cache-control"] = "no-cache"
+
+        return response
+
+
+app.mount("/", Static(directory=WEB_DIR, html=True), name="web")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8075)

@@ -41,7 +41,7 @@ The server listens only on `127.0.0.1`. The dot in the top-right corner turns gr
 
 On the **Per-key** tab:
 
-1. Select keys. Click a key to select it, or drag across several keys. The buttons select common groups: **All**, **None**, **Top row**, **Home row**, **Bottom row**, **Arrows**, and **WASD**. Press Esc to clear the selection.
+1. Select keys. Click a key to select it, or drag across several keys. The buttons select common groups: **All**, **Top row**, **Home row**, **Bottom row**, **Arrows**, and **WASD**. The line under the board lists the selected keys; **Select none** or Esc clears the selection.
 2. Pick a colour with the colour picker, type a hex value such as `#ff4000` or `f40`, or click a swatch.
 3. Click **Paint selected**. **Reset to default** removes the colour from the selected keys.
 
@@ -65,7 +65,7 @@ An upload takes about 0.11 seconds per 4 KB chunk. A 28-frame GIF takes about 25
 In **Keys**:
 
 1. Pick the **Base** or **Fn** layer. The Fn layer is active while you hold Fn.
-2. Select keys on the board, then pick an action: **Key** (with optional modifiers; **Press a key** fills it in from your keyboard), **Media**, **Mouse**, **Macro**, **Disable**, or **Default** to undo a remap. Click **Assign to selected keys**. Each key shows what it is assigned to.
+2. Select keys on the board, then pick an action: **Key** (with optional modifiers; **Press a key** fills it in from your keyboard), **Media**, **Mouse**, **Macro**, **Disable**, or **Default** to undo a remap. Click **Assign to selected keys**. A remapped key is highlighted and shows its assignment in place of its printed label.
 3. Click **Apply** to write both layers and all macros to the keyboard. **Reset layer** returns the layer to the factory assignments.
 
 Under **Macros**, click **New macro**, then **Record** and type the sequence, or add events by hand with a delay after each one. **Record** stores the time between key presses as the delays. Bind the macro to a key with the **Macro** action. A macro can play once, a set number of times, until you press the key again (**toggle**), or while you hold the key. Macro memory is limited; the panel shows how much is used.

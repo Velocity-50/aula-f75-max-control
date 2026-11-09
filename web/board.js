@@ -21,6 +21,7 @@ export function initBoard(layout) {
     el.dataset.name = key.name;
     el.title = key.name;
     label.textContent = key.label;
+    label.className = "label";
     caption.className = "caption";
     el.append(label, caption);
     Object.assign(el.style, {
@@ -45,6 +46,17 @@ export function initBoard(layout) {
   board.append(knob);
 
   const notify = () => listeners.forEach((listener) => listener());
+  const hint = $("#selection").textContent;
+
+  function showSelection() {
+    const labels = layout.keys.filter((key) => selected.has(key.name)).map((key) => key.label || key.name);
+
+    $("#selection").textContent = labels.length ? `Selected: ${labels.join(", ")}` : hint;
+    $("#select-none").disabled = labels.length === 0;
+  }
+
+  listeners.push(showSelection);
+  $("#select-none").addEventListener("click", () => select([]));
 
   function select(names) {
     selected.clear();

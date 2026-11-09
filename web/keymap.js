@@ -113,7 +113,7 @@ export function initKeymap({ api, message, layout, board }) {
     const names = [...board.selected];
 
     $("#keys-selection").textContent = names.length
-      ? `${names.length} key${names.length === 1 ? "" : "s"} selected on the ${layer === "fn" ? "Fn" : "base"} layer`
+      ? `Pick an action for the ${layer === "fn" ? "Fn" : "base"} layer`
       : "Select keys on the board";
 
     if (names.length) loadAction(keymap[layer][names[0]]);

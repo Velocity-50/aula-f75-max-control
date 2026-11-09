@@ -154,7 +154,6 @@ function bindControls() {
   const groups = {
     ...GROUPS,
     all: layout.keys.map((k) => k.name),
-    none: [],
     top: layout.keys.filter((k) => k.y === 0).map((k) => k.name),
     bottom: layout.keys.filter((k) => k.y === bottomRow).map((k) => k.name),
   };
