@@ -13,7 +13,7 @@ export function initKeymap({ api, message, layout, board }) {
   let applying = false;
   let capturing = false;
 
-  const visible = () => !$("#keys-section").hidden;
+  const visible = () => !$("#config-section").hidden && !$("#keymap-panel").hidden;
   const dirty = () => JSON.stringify(keymap) !== saved;
   const pick = (list, name) => list.find((item) => item.name === name)?.label ?? name;
 
@@ -132,18 +132,6 @@ export function initKeymap({ api, message, layout, board }) {
     message("Assigned. Apply to write it to the keyboard");
   }
 
-  function setLayer(next) {
-    layer = next;
-
-    for (const button of document.querySelectorAll("[data-layer]")) {
-      button.classList.toggle("active", button.dataset.layer === layer);
-    }
-
-    board.setDisabled(options.reserved[layer]);
-    paint();
-    syncSelection();
-  }
-
   function stopCapture() {
     capturing = false;
     window.removeEventListener("keydown", onCapture, true);
@@ -227,10 +215,6 @@ export function initKeymap({ api, message, layout, board }) {
   }
 
   function bind() {
-    for (const button of document.querySelectorAll("[data-layer]")) {
-      button.addEventListener("click", () => setLayer(button.dataset.layer));
-    }
-
     $("#action-kind").addEventListener("change", showKind);
     $("#capture").addEventListener("click", toggleCapture);
     $("#assign").addEventListener("click", assign);
@@ -267,10 +251,14 @@ export function initKeymap({ api, message, layout, board }) {
     if (visible()) show();
   }
 
-  function show() {
+  function show(next = layer) {
+    layer = next;
+
     if (!options) return;
 
-    setLayer(layer);
+    board.setDisabled(options.reserved[layer]);
+    paint();
+    syncSelection();
     syncButtons();
   }
 

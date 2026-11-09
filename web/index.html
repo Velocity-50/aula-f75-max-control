@@ -10,8 +10,8 @@
   <header>
     <h1>AULA F75 Max</h1>
     <nav class="switch">
-      <button data-section="lighting">Lighting</button>
-      <button data-section="keys">Keys</button>
+      <button data-section="lighting">Colors</button>
+      <button data-section="config">Config</button>
     </nav>
     <span id="status" class="status">checking…</span>
   </header>
@@ -147,13 +147,14 @@
         </div>
       </div>
 
-      <div id="keys-section" hidden>
+      <div id="config-section" hidden>
         <nav class="tabs">
-          <button data-layer="base">Base</button>
-          <button data-layer="fn">Fn</button>
+          <button data-config="base">Base</button>
+          <button data-config="fn">Fn</button>
+          <button data-config="settings">Settings</button>
         </nav>
 
-        <div class="controls">
+        <div id="keymap-panel" class="controls">
           <div class="group">
             <h2>Action</h2>
             <p id="keys-selection" class="note"></p>
@@ -202,6 +203,43 @@
             </div>
           </div>
         </div>
+
+        <div id="settings-panel" class="controls" hidden>
+          <div class="group">
+            <h2>Sleep after</h2>
+            <select data-setting="sleep">
+              <option value="0">Never</option>
+              <option value="1">1 minute</option>
+              <option value="5">5 minutes</option>
+              <option value="30">30 minutes</option>
+            </select>
+            <p class="note">Idle time before the keyboard sleeps in 2.4G or Bluetooth mode. 30 minutes is the longest the firmware offers.</p>
+          </div>
+
+          <div class="group">
+            <h2>Key response <output id="settings-response-out"></output></h2>
+            <input type="range" data-setting="response" min="1" max="5">
+            <p class="note">1 is fastest, 5 filters the most switch bounce. Raise it if keys double-type. The factory default is 2.</p>
+          </div>
+
+          <div class="group">
+            <h2>Block keys</h2>
+            <div class="stack">
+              <label class="inline"><input type="checkbox" data-setting="disable_win"> Disable the Win key</label>
+              <label class="inline"><input type="checkbox" data-setting="disable_alt_f4"> Disable Alt+F4</label>
+              <label class="inline"><input type="checkbox" data-setting="disable_alt_tab"> Disable Alt+Tab</label>
+            </div>
+            <p class="note">Stops these keys from closing or leaving a game by accident.</p>
+          </div>
+
+          <div class="group">
+            <h2>Fn switch</h2>
+            <label class="inline"><input type="checkbox" data-setting="fn_switch"> On</label>
+            <p class="note">Probably swaps the top row between F1–F12 and media keys. Not yet tested on this keyboard.</p>
+          </div>
+
+          <p class="note wide">The keyboard can't report these settings, so this page shows the last values applied from here, or the factory defaults. <b>Apply</b> writes all of them at once.</p>
+        </div>
       </div>
 
       <footer class="actions">
@@ -209,6 +247,7 @@
         <button id="clock">Sync clock</button>
         <button id="keys-reset" class="keys-only">Reset layer</button>
         <button id="keys-apply" class="primary keys-only">Apply</button>
+        <button id="settings-apply" class="primary settings-only">Apply</button>
         <button id="apply" class="primary lighting-only">Apply</button>
         <span id="message" class="message"></span>
       </footer>

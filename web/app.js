@@ -3,6 +3,7 @@ import { initBoard } from "./board.js";
 import { bindHex, syncHex } from "./hex.js";
 import { initKeymap } from "./keymap.js";
 import { initScreen } from "./screen.js";
+import { initSettings } from "./settings.js";
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -21,7 +22,8 @@ let applying = false;
 let pendingApply = false;
 let autoTimer;
 let view;
-let section = localStorage.getItem("section") === "keys" ? "keys" : "lighting";
+let config = "base";
+let section = localStorage.getItem("section") === "config" ? "config" : "lighting";
 
 function keyColor(key) {
   if (state.active === "custom") return state.custom.keys[key.name] ?? state.custom.base;
@@ -67,7 +69,7 @@ function syncControls() {
   $("#effect-panel").hidden = view !== "effect";
   $("#screen-panel").hidden = view !== "screen";
 
-  for (const el of document.querySelectorAll(".lighting-only")) el.hidden = section !== "lighting" || view === "screen";
+  syncFooter();
 
   $("#base-color").value = custom.base;
   $("#custom-brightness").value = custom.brightness;
@@ -86,6 +88,34 @@ function syncControls() {
   syncHex();
 }
 
+function syncFooter() {
+  const shown = {
+    "lighting-only": section === "lighting" && view !== "screen",
+    "keys-only": section === "config" && config !== "settings",
+    "settings-only": section === "config" && config === "settings",
+  };
+
+  for (const [name, visible] of Object.entries(shown)) {
+    for (const el of document.querySelectorAll(`.${name}`)) el.hidden = !visible;
+  }
+}
+
+function showConfig(next) {
+  if (next === "settings") board.select([]);
+
+  config = next;
+
+  for (const tab of document.querySelectorAll("[data-config]")) {
+    tab.classList.toggle("active", tab.dataset.config === config);
+  }
+
+  $("#keymap-panel").hidden = config === "settings";
+  $("#settings-panel").hidden = config !== "settings";
+  syncFooter();
+
+  if (config !== "settings") keymap.show(config);
+}
+
 function showSection(next) {
   if (next !== section) board.select([]);
 
@@ -97,15 +127,13 @@ function showSection(next) {
   }
 
   $("#lighting-section").hidden = section !== "lighting";
-  $("#keys-section").hidden = section !== "keys";
-  board.board.classList.toggle("keys", section === "keys");
-
-  for (const el of document.querySelectorAll(".keys-only")) el.hidden = section !== "keys";
+  $("#config-section").hidden = section !== "config";
+  board.board.classList.toggle("keys", section === "config");
 
   syncControls();
 
-  if (section === "keys") {
-    keymap.show();
+  if (section === "config") {
+    showConfig(config);
   } else {
     board.setDisabled([]);
     paintBoard();
@@ -162,6 +190,10 @@ function bindControls() {
 
   for (const button of document.querySelectorAll("[data-section]")) {
     button.addEventListener("click", () => showSection(button.dataset.section));
+  }
+
+  for (const tab of document.querySelectorAll("[data-config]")) {
+    tab.addEventListener("click", () => showConfig(tab.dataset.config));
   }
 
   for (const tab of document.querySelectorAll(".tabs button[data-view]")) {
@@ -257,6 +289,7 @@ view = state.active;
 board = initBoard(layout);
 keymap = initKeymap({ api, message, layout, board });
 initScreen({ api, message });
+initSettings({ api, message });
 bindControls();
 showSection(section);
 refreshStatus();
