@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>F75 Max</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>AULA F75 Max</h1>
+    <span id="status" class="status">checking…</span>
+  </header>
+
+  <main>
+    <section class="board-wrap">
+      <div id="board" class="board"></div>
+      <p class="hint">Click or drag to select keys · Esc clears the selection</p>
+    </section>
+
+    <section class="panel">
+      <nav class="tabs">
+        <button data-mode="custom">Per-key</button>
+        <button data-mode="effect">Effect</button>
+      </nav>
+
+      <div id="custom-panel" class="controls">
+        <div class="group">
+          <h2>Selection</h2>
+          <div class="buttons" id="select-buttons">
+            <button data-select="all">All</button>
+            <button data-select="none">None</button>
+            <button data-select="home">Home row</button>
+            <button data-select="bottom">Bottom row</button>
+            <button data-select="arrows">Arrows</button>
+            <button data-select="wasd">WASD</button>
+          </div>
+        </div>
+
+        <div class="group">
+          <h2>Key colour</h2>
+          <div class="buttons">
+            <input type="color" id="paint-color" value="#00ffff">
+            <button id="paint" class="primary-outline">Paint selected</button>
+            <button id="unpaint">Reset to default</button>
+          </div>
+          <div id="swatches" class="swatches"></div>
+        </div>
+
+        <div class="group">
+          <h2>Default colour</h2>
+          <div class="buttons">
+            <input type="color" id="base-color">
+            <span class="note">used by every key without its own colour</span>
+          </div>
+        </div>
+
+        <div class="group">
+          <h2>Brightness <output id="custom-brightness-out"></output></h2>
+          <input type="range" id="custom-brightness" min="1" max="5">
+        </div>
+      </div>
+
+      <div id="effect-panel" class="controls">
+        <div class="group">
+          <h2>Effect</h2>
+          <select id="effect-mode"></select>
+        </div>
+
+        <div class="group">
+          <h2>Colour</h2>
+          <div class="buttons">
+            <input type="color" id="effect-color">
+            <label><input type="checkbox" id="effect-rainbow"> Rainbow</label>
+          </div>
+        </div>
+
+        <div class="group">
+          <h2>Brightness <output id="effect-brightness-out"></output></h2>
+          <input type="range" id="effect-brightness" min="1" max="5">
+        </div>
+
+        <div class="group">
+          <h2>Speed <output id="effect-speed-out"></output></h2>
+          <input type="range" id="effect-speed" min="1" max="5">
+        </div>
+
+        <div class="group">
+          <h2>Direction</h2>
+          <select id="effect-direction">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+        </div>
+      </div>
+
+      <footer class="actions">
+        <label><input type="checkbox" id="auto-apply"> Auto-apply</label>
+        <button id="clock">Sync clock</button>
+        <button id="apply" class="primary">Apply</button>
+        <span id="message" class="message"></span>
+      </footer>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
