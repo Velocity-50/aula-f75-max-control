@@ -16,7 +16,7 @@ Over Bluetooth, the keyboard's report descriptor has report ID 8 ("consumer, 16-
 
 ## Fn shortcuts
 
-According to the Epomaker F75 Max manual, **Fn** + knob press switches the knob between screen control and volume. The knob lighting has no known setting.
+According to the Epomaker F75 Max manual, **Fn** + knob press switches the knob between screen control and volume. In screen control, turning the knob steps through the screen pages. See [screen-pages.md](screen-pages.md). The knob lighting has no known setting.
 
 ## Evidence about a write format
 

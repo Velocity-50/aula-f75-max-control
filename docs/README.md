@@ -8,6 +8,7 @@ These notes cover keyboard features that this project does not implement yet: ke
 | Macros stored on the keyboard | Yes | Byte format known and tested on hardware, on the same sibling model | [macros.md](macros.md) |
 | Knob rotation and press | Unknown | Input codes known. No write format known | [knob.md](knob.md) |
 | Factory reset | Partly | A reset sequence exists. A user reports that it leaves screen images and settings in place | [reset.md](reset.md) |
+| Choosing the screen page from the computer | Unknown | No source has a command. The keyboard switches pages with Fn + knob, then turning the knob | [screen-pages.md](screen-pages.md) |
 
 ## Sources
 
