@@ -69,7 +69,9 @@ An upload takes about 0.11 seconds per 4 KB chunk. A 28-frame GIF takes about 25
 
 ![Key remapping in the web control panel](assets/Keybind%20Settings.png)
 
-Click **Config** at the top. The board shows the assignments for the selected layer. A remapped key is highlighted and shows what it sends in place of its printed label; in the screenshot, Del sends Home.
+Click **Config** at the top. The board shows the assignments for the selected layer. A remapped key is highlighted and shows what it sends in place of its printed label; in the screenshot above, Del sends Home. On the Fn layer below, Fn + F1 and Fn + F2 change the screen brightness, and Fn + Del sends Delete.
+
+![Fn-layer remapping in the web control panel](assets/Keybind%20Fn%20Layer.png)
 
 To remap keys:
 
@@ -101,6 +103,8 @@ The keyboard holds up to 100 macros in a small memory. The panel shows how much 
 Keys that the firmware reserves are greyed out: Fn on both layers, and Backspace on the Fn layer. Assigning a mouse click directly to a key does nothing on this keyboard, so use a macro with **Add mouse click** instead. The keyboard cannot report its key assignments, so the app saves them to `~/.config/aula-f75max/keymap.json`, which `./aula.py remap` uses too.
 
 ### Change keyboard settings
+
+![Keyboard settings in the web control panel](assets/Keyboard%20Settings.png)
 
 Click **Config** at the top, then the **Settings** tab, change any of these, and click **Apply**:
 
