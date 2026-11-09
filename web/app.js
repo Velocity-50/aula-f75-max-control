@@ -1,3 +1,5 @@
+import { initScreen } from "./screen.js";
+
 const $ = (selector) => document.querySelector(selector);
 
 const SWATCHES = ["#ffffff", "#ff0000", "#ff4000", "#ffd400", "#00ff40", "#00ffff", "#0080ff", "#8000ff", "#ff00ff", "#ff1493"];
@@ -14,9 +16,11 @@ let keyElements = new Map();
 let applying = false;
 let pendingApply = false;
 let autoTimer;
+let view;
 
 async function api(path, options = {}) {
-  const response = await fetch(path, { headers: { "content-type": "application/json" }, ...options });
+  const headers = typeof options.body === "string" ? { "content-type": "application/json" } : {};
+  const response = await fetch(path, { headers, ...options });
   const body = await response.json().catch(() => ({}));
 
   if (!response.ok) {
@@ -133,11 +137,14 @@ function syncControls() {
   const { custom, effect } = state;
 
   for (const tab of document.querySelectorAll(".tabs button")) {
-    tab.classList.toggle("active", tab.dataset.mode === state.active);
+    tab.classList.toggle("active", tab.dataset.view === view);
   }
 
-  $("#custom-panel").hidden = state.active !== "custom";
-  $("#effect-panel").hidden = state.active !== "effect";
+  $("#custom-panel").hidden = view !== "custom";
+  $("#effect-panel").hidden = view !== "effect";
+  $("#screen-panel").hidden = view !== "screen";
+
+  for (const el of document.querySelectorAll(".lighting-only")) el.hidden = view === "screen";
 
   $("#base-color").value = custom.base;
   $("#custom-brightness").value = custom.brightness;
@@ -268,7 +275,11 @@ function bindControls() {
 
   for (const tab of document.querySelectorAll(".tabs button")) {
     tab.addEventListener("click", () => {
-      state.active = tab.dataset.mode;
+      view = tab.dataset.view;
+
+      if (view === "screen") return syncControls();
+
+      state.active = view;
       changed();
     });
   }
@@ -352,8 +363,10 @@ function bindControls() {
 }
 
 [layout, state] = await Promise.all([api("/api/layout"), api("/api/state")]);
+view = state.active;
 
 renderBoard();
+initScreen({ api, message });
 bindControls();
 syncControls();
 paintBoard();

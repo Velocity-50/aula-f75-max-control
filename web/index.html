@@ -20,8 +20,9 @@
 
     <section class="panel">
       <nav class="tabs">
-        <button data-mode="custom">Per-key</button>
-        <button data-mode="effect">Effect</button>
+        <button data-view="custom">Per-key</button>
+        <button data-view="effect">Effect</button>
+        <button data-view="screen">Screen</button>
       </nav>
 
       <div id="custom-panel" class="controls">
@@ -100,10 +101,45 @@
         </div>
       </div>
 
+      <div id="screen-panel" class="controls">
+        <div class="group">
+          <h2>Image</h2>
+          <label id="screen-drop" class="drop">
+            <input type="file" id="screen-file" accept="image/*" hidden>
+            <span id="screen-drop-text">Drop a GIF or image here, or click to choose</span>
+          </label>
+
+          <h2 class="spaced">Fit</h2>
+          <select id="screen-fit">
+            <option value="contain">Contain (letterbox)</option>
+            <option value="cover">Cover (crop to fill)</option>
+            <option value="stretch">Stretch</option>
+          </select>
+
+          <div class="buttons spaced">
+            <button id="screen-upload" class="primary" disabled>Upload to keyboard</button>
+          </div>
+          <progress id="screen-progress" max="1" value="0" hidden></progress>
+          <p id="screen-status" class="note"></p>
+        </div>
+
+        <div class="group">
+          <h2>Preview</h2>
+          <div class="screen-frame"><img id="screen-preview" alt="" hidden></div>
+          <p id="screen-info" class="note">Shown in the screen's 16-bit colour.</p>
+        </div>
+
+        <div class="group">
+          <h2>On the keyboard</h2>
+          <div class="screen-frame"><img id="screen-current" alt="" hidden></div>
+          <p class="note">Last upload from this app. To show it, press the knob and choose the image display.</p>
+        </div>
+      </div>
+
       <footer class="actions">
-        <label><input type="checkbox" id="auto-apply"> Auto-apply</label>
+        <label class="lighting-only"><input type="checkbox" id="auto-apply"> Auto-apply</label>
         <button id="clock">Sync clock</button>
-        <button id="apply" class="primary">Apply</button>
+        <button id="apply" class="primary lighting-only">Apply</button>
         <span id="message" class="message"></span>
       </footer>
     </section>

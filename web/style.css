@@ -175,6 +175,37 @@ select { width: 100%; text-transform: capitalize; }
 output { color: var(--fg); margin-left: 4px; }
 
 .note { color: var(--muted); font-size: 12px; }
+.note.error { color: var(--error); }
+.spaced { margin-top: 16px; }
+
+.drop {
+  display: block;
+  padding: 22px 14px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--muted);
+  text-align: center;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.drop:hover, .drop.over { border-color: var(--accent); color: var(--fg); }
+
+.screen-frame {
+  display: grid;
+  place-items: center;
+  width: 256px;
+  height: 256px;
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.screen-frame img { width: 256px; height: 256px; image-rendering: pixelated; }
+
+progress { width: 100%; margin-top: 12px; accent-color: var(--accent); }
 
 .swatches { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 
@@ -194,7 +225,7 @@ output { color: var(--fg); margin-left: 4px; }
   border-top: 1px solid var(--border);
 }
 
-.actions label { margin-right: auto; }
+#clock { margin-left: auto; }
 
 .message { min-width: 160px; color: var(--muted); font-size: 12px; text-align: right; }
 .message.error { color: var(--error); }

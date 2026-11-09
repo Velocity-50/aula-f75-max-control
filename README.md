@@ -1,11 +1,12 @@
-# AULA F75 Max lighting control
+# AULA F75 Max control
 
-Control the RGB lighting on an AULA F75 Max keyboard from macOS or Linux. AULA ships its configuration software only for Windows. This project talks to the keyboard directly over USB with a small Python library, and adds a command-line tool and a local web control panel on top.
+Control the RGB lighting and the screen on an AULA F75 Max keyboard from macOS or Linux. AULA ships its configuration software only for Windows. This project talks to the keyboard directly over USB with a small Python library, and adds a command-line tool and a local web control panel on top.
 
 You can:
 
 - Set any of the 20 built-in lighting effects, with colour, rainbow, brightness, speed, and direction.
 - Give every key its own colour.
+- Put an image or animated GIF on the keyboard's screen.
 - Sync the clock on the keyboard's screen.
 
 ![Per-key colours in the web control panel](assets/Key%20Selection.png)
@@ -45,6 +46,15 @@ Click **Apply** to send the change to the keyboard. To send changes automaticall
 
 The keyboard cannot report its current lighting. After each successful apply, the server saves the settings to `~/.config/aula-f75max/state.json` and loads them the next time you open the page.
 
+On the **Screen** tab:
+
+1. Drop an image or GIF on the drop area, or click it to choose a file.
+2. Pick how the image fits the 128×128 screen: **Contain** shows the whole image with black bars, **Cover** crops it to fill the screen, and **Stretch** ignores the aspect ratio.
+3. Check the preview, which shows the image in the screen's 16-bit colour, then click **Upload to keyboard**.
+4. To show the image, press the knob and choose the image display.
+
+An upload takes about 0.11 seconds per 4 KB chunk. A 28-frame GIF takes about 25 seconds. Lighting changes wait until the upload finishes. **On the keyboard** shows the last image uploaded from this app.
+
 ## Use the command line
 
 ```sh
@@ -54,24 +64,46 @@ The keyboard cannot report its current lighting. After each successful apply, th
 ./aula.py light off
 ./aula.py keys --all 8000ff a,s,d,f,j,k,l,semicolon=00ffff up,left,down,right=ff1493
 ./aula.py clock                           # sync the screen clock
+./aula.py screen eyes.gif --fit cover     # upload an image or GIF to the screen
+./aula.py screen eyes.gif --preview out.gif  # write what the screen will show, without uploading
 ```
 
 `keys` takes groups of comma-separated key names, each followed by `=RRGGBB`. Keys you leave out get the `--all` colour, or turn off if you omit `--all`. Run `./aula.py keys --help` to list every key name, and `./aula.py light --help` to list the effects.
+
+## How images are converted
+
+The screen holds one image of up to 255 frames. Each frame shows for 30 to 500 ms.
+
+- A frame longer than 500 ms becomes several copies of the same frame, so the timing stays the same.
+- A GIF with more than 255 frames, after that split, keeps 255 evenly spaced frames. The kept frames take over the time of the dropped ones, so the animation runs for the same total time.
+- Frames shorter than 30 ms are slowed to 30 ms.
+
+The 255-frame limit protects the keyboard. The firmware writes the image straight to flash, and on a related AULA keyboard, data past the limit permanently overwrote the built-in menu graphics. `protocol.py` checks the frame count and stream size again just before sending.
 
 ## Limits
 
 - Settings go over the USB cable only. The keyboard keeps them when you switch to Bluetooth or 2.4G.
 - The knob's lighting and function cannot be changed.
-- Screen image and GIF uploads and key remapping are not implemented.
+- Key remapping is not implemented.
+- Each upload rewrites the same area of flash. Uploading by hand is fine. Uploading in a tight loop, for example to show live system stats, wears the flash out.
 - The direction values 0 to 3 are passed to the keyboard as-is. Nobody has documented which direction each value selects.
 
 ## How it works
 
 The keyboard (USB ID `0c45:800a`) accepts 64-byte HID feature reports on its vendor interface (usage page `0xFF13`). Each change is a short exchange: begin, select a block, send the data, then apply. The keyboard acknowledges each step.
 
-- The lighting, clock, and per-key packet formats come from [mohin7/aula-f75max](https://github.com/mohin7/aula-f75max) and [thibaultmiclo/aula-driver](https://github.com/thibaultmiclo/aula-driver), and also match [VitalyArt/Aula-F75-Max-Driver](https://github.com/VitalyArt/Aula-F75-Max-Driver).
+- The lighting, clock, per-key, and screen formats come from [mohin7/aula-f75max](https://github.com/mohin7/aula-f75max), [thibaultmiclo/aula-driver](https://github.com/thibaultmiclo/aula-driver), and [VitalyArt/Aula-F75-Max-Driver](https://github.com/VitalyArt/Aula-F75-Max-Driver). The screen upload, 16-bit colour, and 2 ms frame-delay units were confirmed on the keyboard.
 - The LED number for each key comes from `layouts/rgb-keyboard.xml` in AULA's F75 Max Windows driver, version 1.0.0.5. That file leaves out the right Ctrl key. Its LED number, 98, was found by testing on the keyboard.
 
-`aula.py` holds the protocol, the key layout, and the command-line tool. `server.py` is the FastAPI server, and `web/` holds the page it serves.
+A screen upload uses a second interface (usage page `0xFF68`). After a header command on the main interface, the image goes over in 4096-byte output reports, and the keyboard acknowledges each one.
+
+| File | Contents |
+| --- | --- |
+| `aula.py` | Command-line tool |
+| `protocol.py` | USB protocol: lighting, per-key colours, clock, and screen upload |
+| `layout.py` | Key positions, LED numbers, and effect names |
+| `screen.py` | Image and GIF conversion for the screen |
+| `server.py` | FastAPI server for the web control panel |
+| `web/` | The page that `server.py` serves |
 
 This project is unofficial and not affiliated with AULA or Epomaker.
