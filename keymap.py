@@ -42,7 +42,7 @@ MODS = {"ctrl": 0x01, "shift": 0x02, "alt": 0x04, "win": 0x08}
 MEDIA = {
     "play": ("Play/pause", 0xCD), "stop": ("Stop", 0xB7), "prev": ("Previous track", 0xB6),
     "next": ("Next track", 0xB5), "volup": ("Volume up", 0xE9), "voldown": ("Volume down", 0xEA),
-    "mute": ("Mute", 0xE2),
+    "mute": ("Mute", 0xE2), "brightdown": ("Brightness down", 0x70), "brightup": ("Brightness up", 0x6F),
 }
 MACRO_MODES = {"once": 0, "times": 1, "toggle": 2, "hold": 3}
 MACRO_BUTTONS = {"mouse_left": 0x01, "mouse_right": 0x02, "mouse_middle": 0x04}  # macro records work; the 07 remap slot does not

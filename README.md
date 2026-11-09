@@ -80,7 +80,7 @@ To remap keys:
 	| Action | What the key does |
 	| --- | --- |
 	| **Key** | Sends another key, with optional Ctrl, Shift, Alt, and Win. **Press a key** fills in the key and modifiers from your keyboard. |
-	| **Media** | Play/pause, stop, previous or next track, volume up or down, or mute |
+	| **Media** | Play/pause, stop, previous or next track, volume up or down, mute, or screen brightness up or down |
 	| **Macro** | Plays a macro stored on the keyboard |
 	| **Disable** | Nothing |
 	| **Default** | Its factory action, undoing a remap |

@@ -33,6 +33,7 @@ Tested on 2026-11-09 with a one-off script that writes both tables, using the st
 | Fn | B (78) | `07 02 00 00` (right click) | Nothing |
 | Fn | N (79) | `07 00 FF 00` (wheel down) | Nothing |
 | Fn | Comma (81) | `07 00 01 00` (wheel up) | Nothing |
+| Fn | F1 (2) | `03 70 00 00` (brightness down) | In Windows mode on macOS, Fn + F1 dims the screen |
 
 The keyboard acked every write, so the firmware accepts a slot for Backspace on the Fn layer and then ignores it. Backspace's base-layer slot was not tested.
 
@@ -74,6 +75,10 @@ An example: Caps Lock (index 55) as Ctrl sets bytes 220 to 223 of the base table
 | Volume up | `E9` |
 | Volume down | `EA` |
 | Mute | `E2` |
+| Brightness down | `70` |
+| Brightness up | `6F` |
+
+The first seven are the vendor software's list. The brightness usages are not on it; brightness down was tested on the F75 Max (see [Tested on the F75 Max](#tested-on-the-f75-max)).
 
 ### Special functions
 
