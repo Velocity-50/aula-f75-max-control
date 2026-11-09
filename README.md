@@ -65,10 +65,10 @@ An upload takes about 0.11 seconds per 4 KB chunk. A 28-frame GIF takes about 25
 In **Keys**:
 
 1. Pick the **Base** or **Fn** layer. The Fn layer is active while you hold Fn.
-2. Select keys on the board, then pick an action: **Key** (with optional modifiers; **Press a key** fills it in from your keyboard), **Media**, **Mouse**, **Macro**, **Disable**, or **Default** to undo a remap. Click **Assign to selected keys**. A remapped key is highlighted and shows its assignment in place of its printed label.
-3. Click **Apply** to write both layers and all macros to the keyboard. **Reset layer** returns the layer to the factory assignments.
+2. Select keys on the board, then pick an action: **Key** (with optional modifiers; **Press a key** fills it in from your keyboard), **Media**, **Macro**, **Disable**, or **Default** to undo a remap. Click **Assign to selected keys**. A remapped key is highlighted and shows its assignment in place of its printed label.
+3. Click **Apply** to write both layers and all macros to the keyboard. **Reset layer** asks for confirmation, then returns the layer to the factory assignments and writes it to the keyboard straight away, together with any other unapplied changes.
 
-Under **Macros**, click **New macro**, then **Record** and type the sequence, or add events by hand with a delay after each one. **Record** stores the time between key presses as the delays. Bind the macro to a key with the **Macro** action. A macro can play once, a set number of times, until you press the key again (**toggle**), or while you hold the key. Macro memory is limited; the panel shows how much is used.
+Under **Macros**, click **New macro**, then **Record** and type the sequence, or add events by hand with a delay after each one. **Record** stores the time between key presses as the delays. **Add mouse click** adds a left, right, or middle button press and release, so a macro is also how a key clicks the mouse. Bind the macro to a key with the **Macro** action. A macro can play once, a set number of times, until you press the key again (**toggle**), or while you hold the key. Macro memory is limited; the panel shows how much is used.
 
 Keys that the firmware reserves are greyed out: Fn on both layers, and Backspace on the Fn layer. The keyboard cannot report its key assignments, so the app saves them to `~/.config/aula-f75max/keymap.json`, which `./aula.py remap` uses too.
 
@@ -90,7 +90,7 @@ Keys that the firmware reserves are greyed out: Fn on both layers, and Backspace
 
 `keys` takes groups of comma-separated key names, each followed by `=RRGGBB`. Keys you leave out get the `--all` colour, or turn off if you omit `--all`. Run `./aula.py keys --help` to list every key name, and `./aula.py light --help` to list the effects.
 
-`remap` takes `KEY=ACTION` pairs for the base layer and `--fn KEY=ACTION` for the Fn layer. An action is a key with optional modifiers (`home`, `ctrl+shift+t`), `media:mute`, `mouse:left`, `macro:1`, `disable`, or `default` to undo a remap. Run `./aula.py remap --help` for the full list. The command adds to the remaps saved in `~/.config/aula-f75max/keymap.json`, which the web control panel shares, and writes both layers and all macros to the keyboard. Macros are created in the web control panel.
+`remap` takes `KEY=ACTION` pairs for the base layer and `--fn KEY=ACTION` for the Fn layer. An action is a key with optional modifiers (`home`, `ctrl+shift+t`), `media:mute`, `macro:1`, `disable`, or `default` to undo a remap. Run `./aula.py remap --help` for the full list. The command adds to the remaps saved in `~/.config/aula-f75max/keymap.json`, which the web control panel shares, and writes both layers and all macros to the keyboard. Macros are created in the web control panel.
 
 ## How images are converted
 
@@ -107,6 +107,7 @@ The 255-frame limit protects the keyboard. The firmware writes the image straigh
 - Settings go over the USB cable only. The keyboard keeps them when you switch to Bluetooth or 2.4G.
 - This project cannot change the knob's lighting or function. Nobody has published how.
 - The firmware ignores a Fn-layer remap of Backspace, so the app does not offer it. Fn itself cannot be remapped. Other keys may be reserved on the Fn layer too; nobody has tested each one.
+- Assigning a mouse click or wheel directly to a key does nothing on this keyboard, so the app does not offer it. Mouse clicks do work inside a macro. The wheel has no macro equivalent.
 - The keyboard cannot report its key assignments. The app writes what `keymap.json` holds, so remaps made by other software are replaced on the next apply.
 - Each upload rewrites the same area of flash. Uploading by hand is fine. Uploading in a tight loop, for example to show live system stats, wears the flash out.
 - The direction values 0 to 3 are passed to the keyboard as-is. Nobody has documented which direction each value selects.

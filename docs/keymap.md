@@ -29,8 +29,14 @@ Tested on 2026-11-09 with a one-off script that writes both tables, using the st
 | Fn | Del (119) | `02 00 4C 00` (Delete) | Fn + Del deletes forward |
 | Fn | Backspace (103) | `02 00 4C 00` (Delete) | Fn + Backspace does nothing |
 | Fn | Backspace (103) | `02 00 1D 00` (Z) | Fn + Backspace does nothing |
+| Fn | M (80) | `07 01 00 00` (left click) | Nothing |
+| Fn | B (78) | `07 02 00 00` (right click) | Nothing |
+| Fn | N (79) | `07 00 FF 00` (wheel down) | Nothing |
+| Fn | Comma (81) | `07 00 01 00` (wheel up) | Nothing |
 
 The keyboard acked every write, so the firmware accepts a slot for Backspace on the Fn layer and then ignores it. Backspace's base-layer slot was not tested.
+
+The mouse rows were checked with a browser page that logged every mouse and wheel event while the trackball was not touched. It logged none. The keyboard does have a mouse report (interface 1, report ID 6: 5 buttons, X, Y, wheel), and macro mouse-button records do click (see [macros.md](macros.md#tested-on-the-f75-max)), so the F75 Max firmware needs a different slot format for mouse actions, or has none. The app does not offer the mouse action.
 
 AULA's driver XML can mark a key's Fn-layer action as reserved (`fnlayer_disable="1"`), which thibaultmiclo's key data stores as `fn_locked`. No key is marked in `ea75max.json`. Backspace is probably marked in the F75 Max XML, which is not on this machine. Other keys may be reserved too, so test a key on the Fn layer before relying on it.
 
@@ -52,7 +58,7 @@ AULA's driver XML can mark a key's Fn-layer action as reserved (`fnlayer_disable
 | Modifier alone | `02 bit 00 00` | `bit` = `1 << (usage - 0xE0)`, so `01` to `80` cover left Ctrl to right Win. |
 | Media (consumer usage) | `03 usage 00 00` | One byte only. Known values are listed below. |
 | Macro | `06 macro mode count` | `macro` is the 0-based macro position. See [macros.md](macros.md). |
-| Mouse | `07 buttons wheel 00` | Buttons: `01` left, `02` right, `04` middle. Wheel: `01` up, `FF` down. |
+| Mouse | `07 buttons wheel 00` | Buttons: `01` left, `02` right, `04` middle. Wheel: `01` up, `FF` down. Does nothing on the F75 Max (tested). |
 | Special function | `01 p1 p2 00` | Values are from the vendor `DeviceDriver.exe`. |
 
 An example: Caps Lock (index 55) as Ctrl sets bytes 220 to 223 of the base table to `02 01 00 00`. F12 (index 13) as Ctrl+Shift+T sets bytes 52 to 55 to `02 03 17 00`.

@@ -44,12 +44,8 @@ MEDIA = {
     "next": ("Next track", 0xB5), "volup": ("Volume up", 0xE9), "voldown": ("Volume down", 0xEA),
     "mute": ("Mute", 0xE2),
 }
-MOUSE = {  # name: (label, buttons, wheel)
-    "left": ("Left click", 0x01, 0), "right": ("Right click", 0x02, 0), "middle": ("Middle click", 0x04, 0),
-    "wheelup": ("Wheel up", 0, 0x01), "wheeldown": ("Wheel down", 0, 0xFF),
-}
 MACRO_MODES = {"once": 0, "times": 1, "toggle": 2, "hold": 3}
-MACRO_BUTTONS = {"mouse_left": 0x01, "mouse_right": 0x02, "mouse_middle": 0x04}
+MACRO_BUTTONS = {"mouse_left": 0x01, "mouse_right": 0x02, "mouse_middle": 0x04}  # macro records work; the 07 remap slot does not
 MACRO_SLOTS = 100
 MACRO_BUDGET = 2700  # vendor check: (macros + events) * 8
 
@@ -77,14 +73,6 @@ class MediaAction(BaseModel):
         return bytes((0x03, MEDIA[self.media][1], 0, 0))
 
 
-class MouseAction(BaseModel):
-    kind: Literal["mouse"] = "mouse"
-    mouse: Literal[tuple(MOUSE)]
-
-    def slot(self) -> bytes:
-        return bytes((0x07, *MOUSE[self.mouse][1:], 0))
-
-
 class MacroAction(BaseModel):
     kind: Literal["macro"] = "macro"
     macro: Annotated[int, Field(ge=0, lt=MACRO_SLOTS)]  # 0-based position in Keymap.macros
@@ -102,7 +90,7 @@ class DisableAction(BaseModel):
         return b"\x05\x03\x00\x00"
 
 
-Action = Annotated[KeyAction | MediaAction | MouseAction | MacroAction | DisableAction, Field(discriminator="kind")]
+Action = Annotated[KeyAction | MediaAction | MacroAction | DisableAction, Field(discriminator="kind")]
 
 
 class MacroEvent(BaseModel):
@@ -207,7 +195,6 @@ def options() -> dict:
         "keys": [{"name": n, "label": label, "code": code} for n, (label, _, code) in KEYS.items()],
         "mods": list(MODS),
         "media": [{"name": n, "label": label} for n, (label, _) in MEDIA.items()],
-        "mouse": [{"name": n, "label": m[0]} for n, m in MOUSE.items()],
         "macro_modes": list(MACRO_MODES),
         "macro_buttons": list(MACRO_BUTTONS),
         "reserved": {layer: sorted(keys) for layer, keys in RESERVED.items()},

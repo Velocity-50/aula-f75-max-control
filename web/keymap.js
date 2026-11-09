@@ -20,7 +20,6 @@ export function initKeymap({ api, message, layout, board }) {
   function describe(action) {
     if (action.kind === "key") return [...action.mods.map((m) => MOD_LABELS[m]), index.label(action.key)].join("+");
     if (action.kind === "media") return pick(options.media, action.media);
-    if (action.kind === "mouse") return pick(options.mouse, action.mouse);
     if (action.kind === "macro") return `Macro ${action.macro + 1}`;
 
     return "Off";
@@ -72,7 +71,6 @@ export function initKeymap({ api, message, layout, board }) {
 
     if (kind === "key") $("#action-key").value = action.key;
     if (kind === "media") $("#action-media").value = action.media;
-    if (kind === "mouse") $("#action-mouse").value = action.mouse;
 
     if (kind === "macro") {
       $("#action-macro").value = action.macro;
@@ -95,7 +93,6 @@ export function initKeymap({ api, message, layout, board }) {
     }
 
     if (kind === "media") return { kind, media: $("#action-media").value };
-    if (kind === "mouse") return { kind, mouse: $("#action-mouse").value };
     if (kind === "disable") return { kind };
 
     if (kind === "macro") {
@@ -215,7 +212,6 @@ export function initKeymap({ api, message, layout, board }) {
 
     fill("#action-key", options.keys);
     fill("#action-media", options.media);
-    fill("#action-mouse", options.mouse);
     fill("#action-mode", options.macro_modes.map((name) => ({ name, label: name })));
 
     for (const mod of options.mods) {
@@ -240,9 +236,12 @@ export function initKeymap({ api, message, layout, board }) {
     $("#assign").addEventListener("click", assign);
     $("#keys-apply").addEventListener("click", apply);
     $("#keys-reset").addEventListener("click", () => {
+      const name = layer === "fn" ? "Fn" : "base";
+
+      if (!confirm(`Reset every key on the ${name} layer to its factory action and write it to the keyboard?`)) return;
+
       keymap[layer] = {};
-      changed();
-      message("Layer reset to factory default. Apply to write it to the keyboard");
+      apply();
     });
 
     board.onSelect(syncSelection);

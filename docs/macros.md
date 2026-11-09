@@ -21,6 +21,8 @@ On the F75 Max, the read after the last buffer report returns all zeros.
 
 Tested on 2026-11-09 with a one-off script. It uploaded one macro, `h` down, `h` up, `i` down, `i` up with 10 ms delays (an 8-report buffer), and then wrote a Fn-layer table with J (62) set to `06 00 00 01` (macro 0, play once). Fn + J typed `hi`. The other play modes were not tested.
 
+A second test bound a macro of left button down, left up, right down, right up (records `01 90`, `01 10`, `02 90`, `02 10`) to Fn + M. A browser page logged a left click, then a right click with its context menu. Mouse buttons work in macros even though the mouse remap slot does not; see [keymap.md](keymap.md#tested-on-the-f75-max).
+
 ## Buffer layout
 
 The buffer starts with a 400-byte header: 100 slots of 4 bytes, one per macro position.

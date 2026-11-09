@@ -19,10 +19,8 @@ ACTION is one of:
   disable                    do nothing
   [MOD+...]KEY               a key, optionally with ctrl/shift/alt/win, e.g. home, ctrl+shift+t
   media:NAME                 {media}
-  mouse:NAME                 {mouse}
   macro:N[:MODE[:COUNT]]     play macro N (from the web UI); MODE once (default), times, toggle, hold
-KEY names in ACTION: {keys}""".format(media=" ".join(keymap.MEDIA), mouse=" ".join(keymap.MOUSE),
-                                      keys=" ".join(keymap.KEYS))
+KEY names in ACTION: {keys}""".format(media=" ".join(keymap.MEDIA), keys=" ".join(keymap.KEYS))
 
 
 def color(value: str) -> tuple[int, int, int]:
@@ -60,14 +58,17 @@ def parse_action(spec: str) -> dict | None:
     if spec == "disable":
         return {"kind": "disable"}
 
-    if kind in ("media", "mouse"):
-        return {"kind": kind, kind: rest}
+    if kind == "media":
+        return {"kind": "media", "media": rest}
 
     if kind == "macro":
         number, _, mode = rest.partition(":")
         mode, _, count = mode.partition(":")
 
         return {"kind": "macro", "macro": int(number) - 1, "mode": mode or "once", "count": int(count or 1)}
+
+    if rest:
+        raise argparse.ArgumentTypeError(f"unknown action type {kind!r}; see `remap --help`")
 
     *mods, key = spec.split("+")
 
@@ -100,8 +101,6 @@ def format_action(action: keymap.Action) -> str:
             return "+".join([*action.mods, action.key])
         case keymap.MediaAction():
             return f"media:{action.media}"
-        case keymap.MouseAction():
-            return f"mouse:{action.mouse}"
         case keymap.MacroAction():
             mode = "" if action.mode == "once" else f":{action.mode}"
             count = f":{action.count}" if action.mode == "times" else ""
