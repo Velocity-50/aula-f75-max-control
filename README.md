@@ -17,10 +17,14 @@ You can:
 
 ## Requirements
 
-- [uv](https://docs.astral.sh/uv/). Both scripts declare their own dependencies, and `uv` installs them on first run.
+- [uv](https://docs.astral.sh/uv/) and Python 3.11 or later. `pyproject.toml` lists the dependencies and `uv.lock` pins their versions. `uv` installs them into `.venv` the first time you run a script. To set up `.venv` ahead of time, for example for your editor, run `uv sync`.
 - The keyboard connected with a USB data cable and switched to wired mode. The keyboard does not accept configuration over Bluetooth, and this project does not support the 2.4G receiver.
 
 The project is tested on macOS. Linux should work through the same `hidapi` library, but your user needs read and write access to the keyboard's `/dev/hidraw*` device, and nobody has tested it there yet.
+
+Run the scripts from the repository directory, because `uv` finds the project from the current directory. From anywhere else, use `uv run --project <path-to-repo> <path-to-repo>/aula.py`.
+
+To update the dependencies, run `uv lock --upgrade` and commit the new `uv.lock`.
 
 ## Use the web control panel
 
@@ -107,5 +111,6 @@ A screen upload uses a second interface (usage page `0xFF68`). After a header co
 | `screen.py` | Image and GIF conversion for the screen |
 | `server.py` | FastAPI server for the web control panel |
 | `web/` | The page that `server.py` serves |
+| `pyproject.toml`, `uv.lock` | Dependencies and their pinned versions |
 
 This project is unofficial and not affiliated with AULA or Epomaker.

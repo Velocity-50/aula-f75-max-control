@@ -1,8 +1,4 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.10"
-# dependencies = ["hidapi", "pillow"]
-# ///
+#!/usr/bin/env -S uv run
 """Wired (USB-C) control for the AULA F75 Max (0c45:800a): lighting, per-key RGB, screen, and clock."""
 
 import argparse

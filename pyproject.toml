@@ -1,0 +1,11 @@
+[project]
+name = "aula-f75max"
+version = "0.1.0"
+description = "Control the lighting and screen of an AULA F75 Max keyboard over USB"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.162.2",
+    "hidapi>=0.15.0",
+    "pillow>=13.0.0",
+    "uvicorn>=0.54.0",
+]

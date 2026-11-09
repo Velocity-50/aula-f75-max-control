@@ -1,8 +1,4 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.10"
-# dependencies = ["fastapi", "uvicorn", "hidapi", "pillow"]
-# ///
+#!/usr/bin/env -S uv run
 """Local web UI for the AULA F75 Max: ./server.py, then open http://127.0.0.1:8075"""
 
 import base64
