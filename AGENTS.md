@@ -32,6 +32,7 @@ server.py   (FastAPI)    → layout, protocol, screen   → serves web/ statical
 - `/` (repo root): all Python modules; no package directory.
 - `web/`: vanilla ES modules, no bundler. `app.js` handles lighting, keyboard rendering, tabs, and apply; `screen.js` exports `initScreen({ api, message })` for the Screen tab; `style.css` holds theme variables.
 - `assets/`: README screenshots (filenames contain spaces; link as `assets/Key%20Selection.png`).
+- `docs/`: protocol research for unimplemented features (keymap, macros, knob, factory reset), with sources. Mostly from the EA75MAX sibling; facts there are unverified on the F75 Max until tested.
 
 ## Development Commands
 

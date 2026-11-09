@@ -89,8 +89,8 @@ The 255-frame limit protects the keyboard. The firmware writes the image straigh
 ## Limits
 
 - Settings go over the USB cable only. The keyboard keeps them when you switch to Bluetooth or 2.4G.
-- The knob's lighting and function cannot be changed.
-- Key remapping is not implemented.
+- This project cannot change the knob's lighting or function. Nobody has published how.
+- Key remapping and macros are not implemented. A sibling keyboard with the same USB ID supports both, and [docs/](docs/README.md) records their formats from other projects.
 - Each upload rewrites the same area of flash. Uploading by hand is fine. Uploading in a tight loop, for example to show live system stats, wears the flash out.
 - The direction values 0 to 3 are passed to the keyboard as-is. Nobody has documented which direction each value selects.
 
@@ -111,6 +111,7 @@ A screen upload uses a second interface (usage page `0xFF68`). After a header co
 | `screen.py` | Image and GIF conversion for the screen |
 | `server.py` | FastAPI server for the web control panel |
 | `web/` | The page that `server.py` serves |
+| `docs/` | Research notes on features this project does not implement yet |
 | `pyproject.toml`, `uv.lock` | Dependencies and their pinned versions |
 
 This project is unofficial and not affiliated with AULA or Epomaker.
