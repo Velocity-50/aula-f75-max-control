@@ -109,7 +109,7 @@ Click **Config** at the top, then the **Settings** tab, change any of these, and
 | **Sleep after** | Idle time before the keyboard sleeps in 2.4G or Bluetooth mode: never, 1, 5, or 30 minutes. The firmware offers nothing longer than 30 minutes except never. | 5 minutes |
 | **Key response** | Debounce level 1 to 5. 1 is fastest; raise it if keys double-type. | 2 |
 | **Block keys** | Disables the Win key, Alt+F4, or Alt+Tab, for example so a game isn't closed or left by accident | All off |
-| **Fn switch** | In Mac mode the top row sends media keys whatever this is set to. In Windows mode it probably swaps the top row between F1–F12 and media keys; not yet tested. | Off |
+| **Fn switch** | In Mac mode the top row sends media keys no matter what this is set to. In Windows mode it probably swaps the top row between F1–F12 and media keys; not yet tested. | Off |
 
 The keyboard takes all of these in one message, so **Apply** writes every setting at once. It cannot report them back, so the server saves them to the `settings` part of `~/.config/aula-f75max/state.json` and the page starts from those values, or from the factory defaults if nothing was saved. Settings changed with other software are replaced on the next apply.
 
@@ -147,7 +147,7 @@ The 255-frame limit protects the keyboard. The firmware writes the image straigh
 
 - Settings go over the USB cable only. The keyboard keeps them when you switch to Bluetooth or 2.4G.
 - This project cannot change the knob's lighting or function. Nobody has published how.
-- The Win/Mac/iOS/Android system mode can only be changed on the keyboard's screen menu. Nobody has published a USB command for it. In Mac mode the top row sends media keys, whatever the **Fn switch** says.
+- The Win/Mac/iOS/Android system mode can only be changed on the keyboard's screen menu. Nobody has published a USB command for it. In Mac mode the top row sends media keys no matter what the **Fn switch** says.
 - The firmware ignores a Fn-layer remap of Backspace, so the app does not offer it. Fn itself cannot be remapped. Other keys may be reserved on the Fn layer too; nobody has tested each one.
 - Assigning a mouse click or wheel directly to a key does nothing on this keyboard, so the app does not offer it. Mouse clicks do work inside a macro. The wheel has no macro equivalent.
 - The keyboard cannot report its key assignments. The app writes what `keymap.json` holds, so remaps made by other software are replaced on the next apply.
